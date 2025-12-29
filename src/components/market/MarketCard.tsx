@@ -43,15 +43,15 @@ export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
             aria-selected={isSelected}
         >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-4 pt-3 bg-muted/50">
-                <CardTitle className="text-sm font-medium uppercase tracking-wide">
+                <CardTitle className="text-lg font-medium uppercase tracking-wide">
                     {item.name}
                 </CardTitle>
-                <div className="text-sm font-medium text-gray-600">{unitLabel}</div>
+                <div className="text-base font-medium text-gray-600">{unitLabel}</div>
             </CardHeader>
             <CardContent className="px-4 pb-3 pt-2">
                 <div className="flex justify-between items-end">
                     <div>
-                        <div className="text-2xl font-bold font-mono tracking-tight">
+                        <div className="text-4xl font-bold font-mono tracking-tight">
                             {new Intl.NumberFormat(locale, {
                                 style: 'currency',
                                 currency: item.currency,
@@ -59,8 +59,8 @@ export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
                                 maximumFractionDigits: 2
                             }).format(item.price)}
                         </div>
-                        <div className="flex items-center space-x-2 text-xs mt-0.5">
-                            <span className={`font-mono text-sm font-medium flex items-center ${isPositive ? 'text-green-700' : isNegative ? 'text-red-700' : 'text-gray-600'}`}>
+                        <div className="flex items-center space-x-2 text-base mt-2">
+                            <span className={`font-mono text-base font-medium flex items-center ${isPositive ? 'text-green-700' : isNegative ? 'text-red-700' : 'text-gray-600'}`}>
                                 {isPositive && <ArrowUpIcon className="h-4 w-4 mr-1.5" />}
                                 {isNegative && <ArrowDownIcon className="h-4 w-4 mr-1.5" />}
                                 {isNeutral && <MinusIcon className="h-4 w-4 mr-1.5" />}
