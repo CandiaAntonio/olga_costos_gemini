@@ -13,10 +13,11 @@ interface MarketHistoryChartProps {
     initialItem: MarketItem;
     selectedItem: MarketItem;
     onHover?: (data: { price: number; change: number; changePercent: number; date: Date } | null) => void;
+    range: TimeRange;
+    onRangeChange: (range: TimeRange) => void;
 }
 
-export function MarketHistoryChart({ initialItem, selectedItem, onHover }: MarketHistoryChartProps) {
-    const [range, setRange] = useState<TimeRange>('1Y');
+export function MarketHistoryChart({ initialItem, selectedItem, onHover, range, onRangeChange }: MarketHistoryChartProps) {
     const [data, setData] = useState<{ date: Date; price: number }[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -95,7 +96,7 @@ export function MarketHistoryChart({ initialItem, selectedItem, onHover }: Marke
                             key={r}
                             variant={range === r ? "default" : "outline"}
                             size="sm"
-                            onClick={() => setRange(r)}
+                            onClick={() => onRangeChange(r)}
                             className="text-xs"
                         >
                             {r}

@@ -165,3 +165,33 @@ export async function updateMarketDataIfNeeded(force: boolean = false) {
         console.error("Error updating market data:", e);
     }
 }
+
+export async function getMarketChanges(range: import('./market-db').TimeRange) {
+    const { getMarketHistory } = await import('./market-db'); // Dynamic import to avoid circular dependency if any, strictly not needed but safe
+
+    // Map internal keys to symbols
+    const map = {
+        gold: 'XAU',
+        silver: 'XAG',
+        usd: 'USD'
+    };
+
+    const results: Record<string, { change: number; changePercent: number }> = {};
+
+    await Promise.all(Object.entries(map).map(async ([key, symbol]) => {
+        const history = await getMarketHistory(symbol, range);
+        if (history && history.length > 0) {
+            const startPrice = history[0].price;
+            const endPrice = history[history.length - 1].price;
+
+            const change = endPrice - startPrice;
+            const changePercent = startPrice !== 0 ? (change / startPrice) * 100 : 0;
+
+            results[key] = { change, changePercent };
+        } else {
+            results[key] = { change: 0, changePercent: 0 };
+        }
+    }));
+
+    return results;
+}
