@@ -23,7 +23,7 @@ npm-debug.log*
 *.db-journal
 
 # IDE
-.vscode
+
 .idea
 
 # OS files
