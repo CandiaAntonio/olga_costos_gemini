@@ -33,20 +33,18 @@ export default async function PiedrasPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Gem className={`h-5 w-5 ${
-                    piedra.categoria === 'preciosa'
+                  <Gem className={`h-5 w-5 ${piedra.categoria === 'preciosa'
                       ? 'text-purple-500'
                       : piedra.categoria === 'semipreciosa'
-                      ? 'text-blue-500'
-                      : 'text-gray-400'
-                  }`} />
+                        ? 'text-blue-500'
+                        : 'text-gray-400'
+                    }`} />
                   <CardTitle className="text-lg">{piedra.nombre}</CardTitle>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  piedra.esNatural
+                <span className={`text-sm px-3 py-1 rounded-full ${piedra.esNatural
                     ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-600'
-                }`}>
+                  }`}>
                   {piedra.esNatural ? 'Natural' : 'Sintética'}
                 </span>
               </div>
@@ -59,7 +57,7 @@ export default async function PiedrasPage() {
                 </span>
               </div>
               {piedra.categoria && (
-                <p className="text-xs text-gray-400 mt-2 capitalize">
+                <p className="text-sm text-gray-500 mt-2 capitalize">
                   Categoría: {piedra.categoria}
                 </p>
               )}

@@ -46,7 +46,7 @@ export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
                 <CardTitle className="text-sm font-medium uppercase tracking-wide">
                     {item.name}
                 </CardTitle>
-                <div className="text-xs font-mono text-muted-foreground">{unitLabel}</div>
+                <div className="text-sm font-medium text-gray-600">{unitLabel}</div>
             </CardHeader>
             <CardContent className="px-4 pb-3 pt-2">
                 <div className="flex justify-between items-end">
@@ -60,10 +60,10 @@ export function MarketCard({ item, onClick, isSelected }: MarketCardProps) {
                             }).format(item.price)}
                         </div>
                         <div className="flex items-center space-x-2 text-xs mt-0.5">
-                            <span className={`font-mono font-medium flex items-center ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'}`}>
-                                {isPositive && <ArrowUpIcon className="h-3 w-3 mr-1" />}
-                                {isNegative && <ArrowDownIcon className="h-3 w-3 mr-1" />}
-                                {isNeutral && <MinusIcon className="h-3 w-3 mr-1" />}
+                            <span className={`font-mono text-sm font-medium flex items-center ${isPositive ? 'text-green-700' : isNegative ? 'text-red-700' : 'text-gray-600'}`}>
+                                {isPositive && <ArrowUpIcon className="h-4 w-4 mr-1.5" />}
+                                {isNegative && <ArrowDownIcon className="h-4 w-4 mr-1.5" />}
+                                {isNeutral && <MinusIcon className="h-4 w-4 mr-1.5" />}
                                 {isPositive ? '+' : ''}{item.change.toFixed(2)} ({item.changePercent.toFixed(2)}%)
                             </span>
                         </div>

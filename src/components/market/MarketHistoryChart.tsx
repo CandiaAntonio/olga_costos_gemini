@@ -97,7 +97,7 @@ export function MarketHistoryChart({ initialItem, selectedItem, onHover, range, 
                             variant={range === r ? "default" : "outline"}
                             size="sm"
                             onClick={() => onRangeChange(r)}
-                            className="text-xs"
+                            className="text-sm px-3"
                         >
                             {r}
                         </Button>
@@ -128,13 +128,13 @@ export function MarketHistoryChart({ initialItem, selectedItem, onHover, range, 
                                     dataKey="date"
                                     tickFormatter={formatDate}
                                     minTickGap={30}
-                                    tick={{ fontSize: 12 }}
+                                    tick={{ fontSize: 13 }}
                                 />
                                 <YAxis
                                     tickFormatter={(val) => val.toLocaleString()}
                                     domain={['dataMin', 'dataMax']}
                                     scale="linear"
-                                    tick={{ fontSize: 12 }}
+                                    tick={{ fontSize: 13 }}
                                     width={60}
                                 />
                                 <Tooltip

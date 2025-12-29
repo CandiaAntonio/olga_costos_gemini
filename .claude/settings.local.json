@@ -1,9 +1,0 @@
-1{
-  "permissions": {
-    "allow": [
-       "mcp__ide__executeCode",
-      "Bash(python:*)",
-      "WebSearch"
-    ]
-  }
-}
