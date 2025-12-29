@@ -13,11 +13,13 @@ import {
   DollarSign,
   CalendarDays,
   Menu,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Mercado', href: '/market', icon: TrendingUp },
   { name: 'Piezas', href: '/piezas', icon: Package },
   { name: 'Piedras', href: '/inventario/piedras', icon: Gem },
   { name: 'Esmaltes', href: '/inventario/esmaltes', icon: Palette },

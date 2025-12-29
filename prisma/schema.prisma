@@ -216,3 +216,24 @@ model ConfigEtapa {
   costoFijoDefault Float? // Costo fijo por defecto para esta etapa
   activo          Boolean @default(true)
 }
+
+// ==================== MARKET DATA ====================
+
+model MarketPrice {
+  id        String   @id @default(cuid())
+  symbol    String   // "XAU", "XAG", "USD"
+  date      DateTime
+  price     Float
+  currency  String   // "USD", "COP"
+  
+  // Optional OHLC for future candesticks
+  open      Float?
+  high      Float?
+  low       Float?
+  close     Float?   // Same as price, but explicit if needed
+
+  createdAt DateTime @default(now())
+
+  @@unique([symbol, date]) // One price per day per symbol
+  @@index([symbol, date])
+}
