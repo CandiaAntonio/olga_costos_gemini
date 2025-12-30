@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -197,7 +199,6 @@ export function StonesTable({ initialData }: StonesTableProps) {
           currentSearch={currentSearch}
           currentCategory={currentCategory}
           currentMaterialType={currentMaterialType}
-          stoneTypes={uniqueStoneNames}
           onSearchChange={setCurrentSearch}
           onCategoryChange={setCurrentCategory}
           onMaterialTypeChange={setCurrentMaterialType}
@@ -206,10 +207,13 @@ export function StonesTable({ initialData }: StonesTableProps) {
         <div className="w-full">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b-[0.5px] border-[#F3F4F6] text-[10px] uppercase tracking-widest text-gray-500 font-serif">
+              <tr className="border-b-[0.5px] border-[#F3F4F6] text-xl font-medium tracking-widest text-gray-500 font-serif">
                 <th className="py-6 px-4 w-32 font-normal">
                   <Tooltip>
-                    <TooltipTrigger className="cursor-help hover:text-lebedeva-gold transition-colors">
+                    <TooltipTrigger
+                      className="cursor-help hover:text-lebedeva-gold transition-colors"
+                      title="L: Lote / U: Única + Cód. Piedra + Secuencial (Ej: LDIA001)"
+                    >
                       ID
                     </TooltipTrigger>
                     <TooltipContent className="font-technical text-xs bg-lebedeva-black text-white border-0">
@@ -261,23 +265,23 @@ export function StonesTable({ initialData }: StonesTableProps) {
                         : ""
                     }`}
                   >
-                    <td
-                      className="py-6 px-4 text-sm font-technical font-light text-gray-400 tracking-wide cursor-pointer hover:text-gray-900 transition-colors"
-                      onClick={() =>
-                        router.push(`/inventario/piedras/${stone.id}`)
-                      }
-                    >
-                      {getDisplayId(stone)}
+                    <td className="py-6 px-4 text-sm font-technical font-light text-gray-400 tracking-wide">
+                      <Link
+                        href={`/inventario/piedras/${stone.id}`}
+                        className="block w-full h-full cursor-pointer hover:text-gray-900 transition-colors"
+                      >
+                        {getDisplayId(stone)}
+                      </Link>
                     </td>
-                    <td
-                      className="py-6 px-4 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/inventario/piedras/${stone.id}`)
-                      }
-                    >
-                      <span className="font-serif text-xl text-lebedeva-black tracking-wide group-hover:text-lebedeva-gold transition-colors">
-                        {stone.name}
-                      </span>
+                    <td className="py-6 px-4">
+                      <Link
+                        href={`/inventario/piedras/${stone.id}`}
+                        className="block w-full h-full cursor-pointer group"
+                      >
+                        <span className="font-serif text-xl text-lebedeva-black tracking-wide group-hover:text-lebedeva-gold transition-colors">
+                          {stone.name}
+                        </span>
+                      </Link>
                     </td>
                     <td className="py-6 px-4">
                       <Badge
@@ -319,10 +323,10 @@ export function StonesTable({ initialData }: StonesTableProps) {
                         ) : (
                           <button
                             className={cn(
-                              "cursor-pointer hover:bg-gray-50 px-2 py-1 transition-colors block w-full text-center outline-none focus:bg-gray-50",
+                              "cursor-pointer hover:bg-gray-50 px-2 py-1 transition-colors block w-full text-center outline-none focus:bg-gray-50 font-technical text-sm text-gray-600",
                               (stone.stock || 0) < 10
                                 ? "text-lebedeva-gold font-bold"
-                                : "text-gray-600"
+                                : ""
                             )}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -367,7 +371,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                             }}
                           />
                         ) : (
-                          <span className="text-gray-400 tabular-nums">
+                          <span className="text-gray-400 tabular-nums font-technical text-sm">
                             {new Intl.NumberFormat("es-CO", {
                               style: "currency",
                               currency: "COP",
