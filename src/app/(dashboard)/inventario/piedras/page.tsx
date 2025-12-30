@@ -56,12 +56,9 @@ export default async function PiedrasPage() {
   ];
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 bg-[#FAFAFA] min-h-screen">
       {/* Header */}
       <div className="relative border-b border-gray-100 pb-6 overflow-hidden">
-        <div className="absolute -top-6 -left-4 text-[6rem] font-serif text-lebedeva-gold opacity-5 select-none pointer-events-none z-0 tracking-widest">
-          LEBEDEVA
-        </div>
         <div className="relative z-10 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-serif text-lebedeva-black mb-2">
@@ -73,13 +70,20 @@ export default async function PiedrasPage() {
           </div>
           <div className="flex gap-4">
             <Link href="/inventario/piedras/nueva-lote">
-              <Button className="bg-lebedeva-gray hover:bg-lebedeva-gold hover:text-white text-lebedeva-black rounded-none uppercase tracking-widest text-[10px] px-6 py-3 transition-all duration-300 font-bold border border-transparent hover:border-lebedeva-gold">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-none border-stone-200 font-serif tracking-widest hover:bg-stone-50 hover:text-lebedeva-gold uppercase text-[10px]"
+              >
                 <Plus className="h-3 w-3 mr-2" />
                 Nuevo Lote
               </Button>
             </Link>
             <Link href="/inventario/piedras/nueva">
-              <Button className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-[10px] px-6 py-3 transition-all duration-300 font-bold shadow-md hover:shadow-lg">
+              <Button
+                size="sm"
+                className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-[10px] font-serif shadow-md hover:shadow-lg h-9 px-3"
+              >
                 <Plus className="h-3 w-3 mr-2" />
                 Nueva Piedra
               </Button>

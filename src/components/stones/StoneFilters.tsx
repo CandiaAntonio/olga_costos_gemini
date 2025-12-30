@@ -9,35 +9,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 interface StoneFiltersProps {
   currentSearch: string;
-  currentCategory: string; // 'all' | 'natural' | 'synthetic'
-  currentStoneType: string;
-  currentTrackingType: string;
-  stoneTypes: string[]; // List of unique stone names for the dropdown
+  currentCategory: string; // 'all' | 'Preciosa' | 'Semipreciosa' | 'Sintética'
+  currentMaterialType: string; // 'all' | 'Natural' | 'Sintética'
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
-  onStoneTypeChange: (value: string) => void;
-  onTrackingTypeChange: (value: string) => void;
-  // isLowStock: boolean; // Removed
-  // onLowStockChange: (value: boolean) => void; // Removed
+  onMaterialTypeChange: (value: string) => void;
 }
 
 export function StoneFilters({
   currentSearch,
   currentCategory,
-  currentStoneType,
-  currentTrackingType,
-  stoneTypes,
+  currentMaterialType,
   onSearchChange,
   onCategoryChange,
-  onStoneTypeChange,
-  onTrackingTypeChange,
-}: // isLowStock, // Removed
-// onLowStockChange, // Removed
-Omit<StoneFiltersProps, "isLowStock" | "onLowStockChange">) {
+  onMaterialTypeChange,
+}: StoneFiltersProps) {
   return (
     <div className="flex flex-col xl:flex-row gap-6 mb-8 items-end justify-between font-technical border-b border-[#F3F4F6] pb-4">
       {/* Search - Minimalist Command Line */}
@@ -56,22 +45,22 @@ Omit<StoneFiltersProps, "isLowStock" | "onLowStockChange">) {
 
       {/* Command Bar Actions */}
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4 w-full xl:w-auto">
-        {/* Stone Type Facet */}
+        {/* Material Type Facet */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-widest text-gray-300">
             Tipo
           </span>
-          <Select value={currentStoneType} onValueChange={onStoneTypeChange}>
-            <SelectTrigger className="w-[140px] border-0 p-0 h-auto text-sm bg-transparent focus:ring-0 text-right justify-end gap-2 text-gray-600 hover:text-black transition-colors">
+          <Select
+            value={currentMaterialType}
+            onValueChange={onMaterialTypeChange}
+          >
+            <SelectTrigger className="w-[100px] border-0 p-0 h-auto text-sm bg-transparent focus:ring-0 text-right justify-end gap-2 text-gray-600 hover:text-black transition-colors">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
-            <SelectContent className="rounded-none max-h-[300px]">
-              <SelectItem value="all">Todas</SelectItem>
-              {stoneTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
+            <SelectContent className="rounded-none">
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="Natural">Natural</SelectItem>
+              <SelectItem value="Sintética">Sintética</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -79,36 +68,19 @@ Omit<StoneFiltersProps, "isLowStock" | "onLowStockChange">) {
         {/* Category Facet */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-widest text-gray-300">
-            Cat
+            Categoría
           </span>
           <Select value={currentCategory} onValueChange={onCategoryChange}>
             <SelectTrigger className="w-[120px] border-0 p-0 h-auto text-sm bg-transparent focus:ring-0 text-right justify-end gap-2 text-gray-600 hover:text-black transition-colors">
-              <SelectValue placeholder="Origen" />
+              <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent className="rounded-none">
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="natural">Natural</SelectItem>
-              <SelectItem value="synthetic">Sintética</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="Preciosa">Preciosa</SelectItem>
+              <SelectItem value="Semipreciosa">Semipreciosa</SelectItem>
+              <SelectItem value="Sintética">Sintética</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Tracking Type Toggle (Minimalist) */}
-        <div className="flex items-center gap-4 pl-4 border-l border-[#F3F4F6] h-4">
-          {["all", "LOT", "UNIQUE"].map((type) => (
-            <button
-              key={type}
-              onClick={() => onTrackingTypeChange(type)}
-              className={cn(
-                "text-[10px] uppercase tracking-widest transition-colors duration-300",
-                currentTrackingType === type
-                  ? "text-lebedeva-gold font-bold"
-                  : "text-gray-300 hover:text-gray-500"
-              )}
-            >
-              {type === "all" ? "Todo" : type === "LOT" ? "Lotes" : "Ref"}
-            </button>
-          ))}
         </div>
       </div>
     </div>
