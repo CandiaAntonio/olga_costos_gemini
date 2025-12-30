@@ -11,7 +11,7 @@ export default async function PiedrasPage() {
   const lots = await prisma.tipoPiedra.findMany({
     where: {
       activo: true,
-      inventoryType: "LOT",
+      trackingType: "LOT",
     },
     orderBy: { nombre: "asc" },
   });

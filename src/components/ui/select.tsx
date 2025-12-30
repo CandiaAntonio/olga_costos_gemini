@@ -81,7 +81,7 @@ SelectTrigger.displayName = "SelectTrigger";
 
 const SelectValue = React.forwardRef<
   HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
+  React.HTMLAttributes<HTMLSpanElement> & { placeholder?: string }
 >(({ className, placeholder, ...props }, ref) => {
   const context = React.useContext(SelectContext);
   if (!context) throw new Error("SelectValue must be used within Select");

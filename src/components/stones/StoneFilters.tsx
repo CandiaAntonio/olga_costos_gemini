@@ -14,13 +14,13 @@ import { Button } from "@/components/ui/button";
 interface StoneFiltersProps {
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
-  onInventoryTypeChange: (value: string) => void;
+  onTrackingTypeChange: (value: string) => void;
 }
 
 export function StoneFilters({
   onSearchChange,
   onCategoryChange,
-  onInventoryTypeChange,
+  onTrackingTypeChange,
 }: StoneFiltersProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 bg-white/50 backdrop-blur-sm border-b border-gray-100">
@@ -46,7 +46,7 @@ export function StoneFilters({
           </SelectContent>
         </Select>
 
-        <Select onValueChange={onInventoryTypeChange}>
+        <Select onValueChange={onTrackingTypeChange}>
           <SelectTrigger className="w-[180px] rounded-none border-gray-200 bg-transparent">
             <SelectValue placeholder="Tipo Inventario" />
           </SelectTrigger>

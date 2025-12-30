@@ -12,7 +12,7 @@ interface ClientGemGridProps {
 export function ClientGemGrid({ initialData }: ClientGemGridProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [inventoryType, setInventoryType] = useState("all");
+  const [trackingType, setTrackingType] = useState("all");
 
   const filteredData = useMemo(() => {
     return initialData.filter((item) => {
@@ -30,19 +30,18 @@ export function ClientGemGrid({ initialData }: ClientGemGridProps) {
           item.categoria.toLowerCase() === category.toLowerCase());
 
       // Type filter
-      const matchesType =
-        inventoryType === "all" || item.type === inventoryType;
+      const matchesType = trackingType === "all" || item.type === trackingType;
 
       return matchesSearch && matchesCategory && matchesType;
     });
-  }, [initialData, search, category, inventoryType]);
+  }, [initialData, search, category, trackingType]);
 
   return (
     <>
       <StoneFilters
         onSearchChange={setSearch}
         onCategoryChange={setCategory}
-        onInventoryTypeChange={setInventoryType}
+        onTrackingTypeChange={setTrackingType}
       />
 
       {filteredData.length > 0 ? (

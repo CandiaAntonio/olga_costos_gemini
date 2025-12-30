@@ -24,7 +24,7 @@ interface GemFormData {
   descripcion: string;
   esNatural: boolean;
   categoria: "preciosa" | "semipreciosa" | "sintética";
-  inventoryType: "LOT" | "UNIQUE";
+  trackingType: "LOT" | "UNIQUE";
   // Unique specific
   codigo?: string;
   pesoCarats?: string;
@@ -49,7 +49,7 @@ export function NewGemForm() {
     descripcion: "",
     esNatural: true,
     categoria: "preciosa",
-    inventoryType: "LOT",
+    trackingType: "LOT",
     pesoCarats: "",
     tamano: "",
     claridad: "",
@@ -59,7 +59,7 @@ export function NewGemForm() {
   // Handle selection
   const handleSelect = (selectedType: "LOT" | "UNIQUE") => {
     setType(selectedType);
-    setFormData((prev) => ({ ...prev, inventoryType: selectedType }));
+    setFormData((prev) => ({ ...prev, trackingType: selectedType }));
     setStep("form");
   };
 
