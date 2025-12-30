@@ -46,6 +46,12 @@ export default async function PiedrasPage() {
       stock: null, // Unique stones don't use 'stock' count in the same way (implied 1)
       price: u.costo, // Mapping cost to price for display
       codigo: u.codigo,
+      // Details
+      carats: u.carats,
+      clarity: u.clarity,
+      color: u.color,
+      origin: u.origin,
+      certificate: u.certificateNumber,
     })),
   ];
 

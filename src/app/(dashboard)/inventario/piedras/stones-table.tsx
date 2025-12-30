@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowUpDown } from "lucide-react";
 import { updateStoneStock, updateStonePrice, deleteStone } from "./actions";
 import { useRouter } from "next/navigation";
 import { StoneFilters } from "@/components/stones/StoneFilters";
+import { cn } from "@/lib/utils";
 
 interface StoneData {
   id: string;
@@ -24,24 +25,42 @@ interface StonesTableProps {
   initialData: StoneData[];
 }
 
+type SortKey = "stock" | "price" | null;
+type SortDirection = "asc" | "desc";
+
 export function StonesTable({ initialData }: StonesTableProps) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   // Filter State
   const [currentSearch, setCurrentSearch] = useState("");
-  const [currentCategory, setCurrentCategory] = useState("all");
+  const [currentCategory, setCurrentCategory] = useState("all"); // 'all' | 'natural' | 'synthetic'
   const [currentTrackingType, setCurrentTrackingType] = useState("all");
+  const [currentStoneType, setCurrentStoneType] = useState("all");
   const [isLowStock, setIsLowStock] = useState(false);
+
+  // Price Editing State
+  const [editablePrices, setEditablePrices] = useState<Set<string>>(new Set());
+
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{
+    key: SortKey;
+    direction: SortDirection;
+  }>({ key: null, direction: "asc" });
 
   const getDisplayId = (stone: StoneData) => {
     if (stone.type === "UNIQUE" && stone.codigo) return stone.codigo;
     const prefix = stone.type === "LOT" ? "L" : "U";
-    // Generate a consistent pseudo-ID if real one missing
     const nameCode = stone.name.slice(0, 2).toUpperCase();
     const uniqueSuffix = stone.id.slice(-3).toUpperCase();
     return `${prefix}-${nameCode}-${uniqueSuffix}`;
   };
+
+  // Derive unique stone names for the filter dropdown
+  const uniqueStoneNames = useMemo(() => {
+    const names = new Set(initialData.map((s) => s.name));
+    return Array.from(names).sort();
+  }, [initialData]);
 
   const handleStockUpdate = async (
     id: string,
@@ -63,6 +82,17 @@ export function StonesTable({ initialData }: StonesTableProps) {
     await updateStonePrice(id, type, num);
   };
 
+  const togglePriceEdit = (id: string, e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    const newEditable = new Set(editablePrices);
+    if (newEditable.has(id)) {
+      newEditable.delete(id);
+    } else {
+      newEditable.add(id);
+    }
+    setEditablePrices(newEditable);
+  };
+
   const handleDelete = async (id: string, type: "LOT" | "UNIQUE") => {
     if (!confirm("¿Estás seguro de retirar esta piedra del inventario?"))
       return;
@@ -71,50 +101,92 @@ export function StonesTable({ initialData }: StonesTableProps) {
     setLoadingId(null);
   };
 
-  // Helper for Badge styling
+  const handleSort = (key: SortKey) => {
+    if (!key) return;
+    setSortConfig((current) => ({
+      key,
+      direction:
+        current.key === key && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
   const getBadgeVariant = (cat: string | null) => {
     const lower = cat?.toLowerCase() || "";
-    if (lower.includes("preciosa") && !lower.includes("semi")) return "default"; // Gold/Dark usually
+    if (lower.includes("preciosa") && !lower.includes("semi")) return "default";
     if (lower.includes("sintética")) return "outline";
     return "secondary";
   };
 
-  // Filtering Logic
-  const filteredData = initialData.filter((stone) => {
-    // 1. Search (Name or ID)
-    const searchLower = currentSearch.toLowerCase();
-    const matchesSearch =
-      stone.name.toLowerCase().includes(searchLower) ||
-      getDisplayId(stone).toLowerCase().includes(searchLower);
+  // Processing Data: Filter -> Sort
+  const processedData = useMemo(() => {
+    let data = [...initialData];
 
-    // 2. Category
-    const matchesCategory =
-      currentCategory === "all" ||
-      (stone.category && stone.category.toLowerCase() === currentCategory);
+    // 1. Filter
+    data = data.filter((stone) => {
+      // Search
+      const searchLower = currentSearch.toLowerCase();
+      const matchesSearch =
+        stone.name.toLowerCase().includes(searchLower) ||
+        getDisplayId(stone).toLowerCase().includes(searchLower);
 
-    // 3. Tracking Type
-    const matchesType =
-      currentTrackingType === "all" || stone.type === currentTrackingType;
+      // Category (Natural vs Synthetic)
+      const catLower = stone.category?.toLowerCase() || "";
+      const isSynthetic = catLower.includes("sintética");
+      let matchesCategory = true;
+      if (currentCategory === "natural") {
+        matchesCategory = !isSynthetic; // Includes Preciosa & Semipreciosa
+      } else if (currentCategory === "synthetic") {
+        matchesCategory = isSynthetic;
+      }
 
-    // 4. Low Stock (Only applies to LOTs usually, or low quantity)
-    // Assuming Low Stock means stock < 10 for LOTs. unique always has stock 1 so maybe irrelevant or treat as ok.
-    // Let's say Low Stock filters for LOTs with < 10.
-    const matchesLowStock =
-      !isLowStock || (stone.type === "LOT" && (stone.stock || 0) < 10);
+      // Stone Type
+      const matchesStoneType =
+        currentStoneType === "all" || stone.name === currentStoneType;
 
-    return matchesSearch && matchesCategory && matchesType && matchesLowStock;
-  });
+      // Tracking Type
+      const matchesType =
+        currentTrackingType === "all" || stone.type === currentTrackingType;
+
+      return (
+        matchesSearch && matchesCategory && matchesStoneType && matchesType
+      );
+    });
+
+    // 2. Sort
+    if (sortConfig.key) {
+      data.sort((a, b) => {
+        const valA = a[sortConfig.key!] ?? 0; // Treat null as 0 for sorting
+        const valB = b[sortConfig.key!] ?? 0;
+
+        if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return data;
+  }, [
+    initialData,
+    currentSearch,
+    currentCategory,
+    currentStoneType,
+    currentTrackingType,
+    sortConfig,
+  ]);
 
   return (
     <div className="w-full">
       <StoneFilters
         currentSearch={currentSearch}
         currentCategory={currentCategory}
+        currentStoneType={currentStoneType}
         currentTrackingType={currentTrackingType}
-        isLowStock={isLowStock}
+        stoneTypes={uniqueStoneNames}
         onSearchChange={setCurrentSearch}
         onCategoryChange={setCurrentCategory}
+        onStoneTypeChange={setCurrentStoneType}
         onTrackingTypeChange={setCurrentTrackingType}
+        isLowStock={isLowStock}
         onLowStockChange={setIsLowStock}
       />
 
@@ -125,13 +197,29 @@ export function StonesTable({ initialData }: StonesTableProps) {
               <th className="py-4 px-4 sm:px-6">ID</th>
               <th className="py-4 px-4 sm:px-6 w-1/3">Nombre</th>
               <th className="py-4 px-4 sm:px-6">Categoría</th>
-              <th className="py-4 px-4 sm:px-6 text-center">Stock</th>
-              <th className="py-4 px-4 sm:px-6 text-right">Precio (COP)</th>
+              <th
+                className="py-4 px-4 sm:px-6 text-center cursor-pointer hover:text-gray-800 transition-colors group select-none"
+                onClick={() => handleSort("stock")}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  Stock
+                  <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </th>
+              <th
+                className="py-4 px-4 sm:px-6 text-right cursor-pointer hover:text-gray-800 transition-colors group select-none"
+                onClick={() => handleSort("price")}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  Precio (COP)
+                  <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </th>
               <th className="py-4 px-4 sm:px-6 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((stone) => (
+            {processedData.map((stone) => (
               <tr
                 key={stone.id}
                 onClick={() => router.push(`/inventario/piedras/${stone.id}`)}
@@ -160,7 +248,13 @@ export function StonesTable({ initialData }: StonesTableProps) {
                     <Input
                       type="number"
                       defaultValue={stone.stock || 0}
-                      className="w-20 mx-auto text-center h-8 rounded-none border-gray-200 focus:border-lebedeva-gold focus:ring-0 bg-transparent"
+                      className={cn(
+                        "w-20 mx-auto text-center h-8 rounded-none border-gray-200 focus:border-lebedeva-gold focus:ring-0 bg-transparent transition-colors",
+                        // Low stock intelligence: Highlight if stock < 10
+                        (stone.stock || 0) < 10
+                          ? "text-lebedeva-gold font-bold"
+                          : ""
+                      )}
                       onClick={(e) => e.stopPropagation()}
                       onBlur={(e) =>
                         handleStockUpdate(stone.id, stone.type, e.target.value)
@@ -209,10 +303,10 @@ export function StonesTable({ initialData }: StonesTableProps) {
                 </td>
               </tr>
             ))}
-            {filteredData.length === 0 && (
+            {processedData.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-gray-400">
-                  No se encontraron piedras.
+                  No se encontraron piedras con los filtros seleccionados.
                 </td>
               </tr>
             )}

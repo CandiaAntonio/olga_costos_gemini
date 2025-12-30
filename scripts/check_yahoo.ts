@@ -13,6 +13,6 @@ console.log("Keys of star export:", Object.keys(yahooFinanceStar));
 try {
   const yf = new yahooFinanceDefault();
   console.log("Successfully instantiated new yahooFinanceDefault()");
-} catch (e) {
+} catch (e: any) {
   console.log("Failed to instantiate default:", e.message);
 }
