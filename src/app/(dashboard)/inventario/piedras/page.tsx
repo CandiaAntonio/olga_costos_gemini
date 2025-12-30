@@ -58,21 +58,34 @@ export default async function PiedrasPage() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-100 pb-6">
-        <div>
-          <h1 className="text-4xl font-serif text-lebedeva-black mb-2">
-            Gemas
-          </h1>
-          <p className="text-gray-400 font-technical font-light">
-            Gestión de inventario de piedras
-          </p>
+      <div className="relative border-b border-gray-100 pb-6 overflow-hidden">
+        <div className="absolute -top-6 -left-4 text-[6rem] font-serif text-lebedeva-gold opacity-5 select-none pointer-events-none z-0 tracking-widest">
+          LEBEDEVA
         </div>
-        <Link href="/inventario/piedras/nueva">
-          <Button className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-xs px-6 py-6 transition-all duration-300">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Piedra
-          </Button>
-        </Link>
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif text-lebedeva-black mb-2">
+              Gemas
+            </h1>
+            <p className="text-gray-400 font-technical font-light">
+              Gestión de inventario de piedras
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Link href="/inventario/piedras/nueva-lote">
+              <Button className="bg-lebedeva-gray hover:bg-lebedeva-gold hover:text-white text-lebedeva-black rounded-none uppercase tracking-widest text-[10px] px-6 py-3 transition-all duration-300 font-bold border border-transparent hover:border-lebedeva-gold">
+                <Plus className="h-3 w-3 mr-2" />
+                Nuevo Lote
+              </Button>
+            </Link>
+            <Link href="/inventario/piedras/nueva">
+              <Button className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-[10px] px-6 py-3 transition-all duration-300 font-bold shadow-md hover:shadow-lg">
+                <Plus className="h-3 w-3 mr-2" />
+                Nueva Piedra
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Stones Table */}

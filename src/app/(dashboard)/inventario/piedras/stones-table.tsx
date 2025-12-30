@@ -9,6 +9,7 @@ import { updateStoneStock, updateStonePrice, deleteStone } from "./actions";
 import { useRouter } from "next/navigation";
 import { StoneFilters } from "@/components/stones/StoneFilters";
 import { cn } from "@/lib/utils";
+import { generateStoneUID } from "@/lib/stones";
 
 interface StoneData {
   id: string;
@@ -31,7 +32,7 @@ interface StonesTableProps {
   initialData: StoneData[];
 }
 
-type SortKey = "stock" | "price" | null;
+type SortKey = "stock" | "price" | "category" | null;
 type SortDirection = "asc" | "desc";
 
 export function StonesTable({ initialData }: StonesTableProps) {
@@ -44,8 +45,9 @@ export function StonesTable({ initialData }: StonesTableProps) {
   const [currentTrackingType, setCurrentTrackingType] = useState("all");
   const [currentStoneType, setCurrentStoneType] = useState("all");
 
-  // Price Editing State
+  // Editing State
   const [editablePrices, setEditablePrices] = useState<Set<string>>(new Set());
+  const [editableStockId, setEditableStockId] = useState<string | null>(null);
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{
@@ -55,18 +57,13 @@ export function StonesTable({ initialData }: StonesTableProps) {
 
   const getDisplayId = (stone: StoneData) => {
     if (stone.type === "UNIQUE" && stone.codigo) return stone.codigo;
-    // Fallback or generator for LOTs if they don't have a stored code
-    const prefix = stone.type === "LOT" ? "L" : "U";
-    // NameCode: DIA, RUB, ESM...
-    const nameCode = stone.name
-      .replace(/[^a-zA-Z]/g, "")
-      .slice(0, 3)
-      .toUpperCase();
-    // For Lots, we can just say "LDIA" or "LDIA001" if we had an ID.
-    // Since we don't have a lot serial, we'll use a dense format.
-    // However, the prompt asked for "LDIA001". Using the last 3 of ID is a decent proxy if we lack a real serial.
-    const uniqueSuffix = stone.id.slice(-3).toUpperCase();
-    return `${prefix}${nameCode}${uniqueSuffix}`;
+    // Strict format usage: [Type][NameCode][Serial]
+    return generateStoneUID(
+      stone.name,
+      stone.type,
+      0,
+      stone.id.slice(-3).toUpperCase()
+    );
   };
 
   // Derive unique stone names for the filter dropdown
@@ -169,8 +166,14 @@ export function StonesTable({ initialData }: StonesTableProps) {
     // 2. Sort
     if (sortConfig.key) {
       data.sort((a, b) => {
-        const valA = a[sortConfig.key!] ?? 0;
-        const valB = b[sortConfig.key!] ?? 0;
+        let valA: string | number = a[sortConfig.key!] ?? 0;
+        let valB: string | number = b[sortConfig.key!] ?? 0;
+
+        // Custom handling for category string comparison
+        if (sortConfig.key === "category") {
+          valA = a.category || "";
+          valB = b.category || "";
+        }
 
         if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
         if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
@@ -205,12 +208,20 @@ export function StonesTable({ initialData }: StonesTableProps) {
       <div className="w-full">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b-[0.5px] border-[#F3F4F6] text-[10px] uppercase tracking-widest text-gray-400 font-serif">
-              <th className="py-3 px-4 w-24">ID</th>
-              <th className="py-3 px-4">Nombre</th>
-              <th className="py-3 px-4">Categoría</th>
+            <tr className="border-b-[0.5px] border-[#F3F4F6] text-[10px] uppercase tracking-widest text-gray-500 font-serif">
+              <th className="py-6 px-4 w-24 font-normal">ID</th>
+              <th className="py-6 px-4 font-normal">Nombre</th>
               <th
-                className="py-3 px-4 text-center cursor-pointer hover:text-gray-800 transition-colors group select-none w-32"
+                className="py-6 px-4 font-normal cursor-pointer hover:text-lebedeva-gold transition-colors group select-none"
+                onClick={() => handleSort("category")}
+              >
+                <div className="flex items-center gap-1">
+                  Categoría
+                  <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </th>
+              <th
+                className="py-6 px-4 text-center cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-32 font-normal"
                 onClick={() => handleSort("stock")}
               >
                 <div className="flex items-center justify-center gap-1">
@@ -219,7 +230,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                 </div>
               </th>
               <th
-                className="py-3 px-4 text-right cursor-pointer hover:text-gray-800 transition-colors group select-none w-48"
+                className="py-6 px-4 text-right cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-48 font-normal"
                 onClick={() => handleSort("price")}
               >
                 <div className="flex items-center justify-end gap-1">
@@ -227,7 +238,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                   <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </th>
-              <th className="py-3 px-4 text-center w-16"></th>
+              <th className="py-6 px-4 text-center w-16"></th>
             </tr>
           </thead>
           <tbody>
@@ -236,59 +247,91 @@ export function StonesTable({ initialData }: StonesTableProps) {
               return (
                 <tr
                   key={stone.id}
-                  onClick={() => router.push(`/inventario/piedras/${stone.id}`)}
-                  className={`border-b-[0.5px] border-[#F3F4F6] hover:bg-[#FAFAFA] transition-colors group cursor-pointer ${
+                  className={`border-b-[0.5px] border-[#F3F4F6] hover:bg-white odd:bg-[#FCFCFC] transition-colors group ${
                     loadingId === stone.id
                       ? "opacity-50 pointer-events-none"
                       : ""
                   }`}
                 >
-                  <td className="py-3 px-4 text-lg font-serif text-gray-400">
+                  <td
+                    className="py-6 px-4 text-sm font-technical font-light text-gray-400 tracking-wide cursor-pointer hover:text-gray-900 transition-colors"
+                    onClick={() =>
+                      router.push(`/inventario/piedras/${stone.id}`)
+                    }
+                  >
                     {getDisplayId(stone)}
                   </td>
-                  <td className="py-3 px-4">
-                    <span className="font-serif text-xl text-lebedeva-black">
+                  <td
+                    className="py-6 px-4 cursor-pointer"
+                    onClick={() =>
+                      router.push(`/inventario/piedras/${stone.id}`)
+                    }
+                  >
+                    <span className="font-serif text-xl text-lebedeva-black tracking-wide group-hover:text-lebedeva-gold transition-colors">
                       {stone.name}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-6 px-4">
                     <Badge
                       variant={getBadgeVariant(stone.category) as any}
-                      className="rounded-none font-normal tracking-wide text-[10px] px-2 py-0.5 border-gray-200"
+                      className="rounded-none font-technical font-light tracking-wide text-[10px] px-3 py-1 border-gray-100 bg-white shadow-sm cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // If clicking current, toggle off (back to all)? Or just set.
+                        // Implementation: set to clicked category.
+                        const catLower = stone.category?.toLowerCase() || "";
+                        if (catLower.includes("sintética"))
+                          setCurrentCategory("synthetic");
+                        else setCurrentCategory("natural");
+                      }}
                     >
                       {stone.category || "General"}
                     </Badge>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-6 px-4 text-center">
                     {stone.type === "LOT" ? (
-                      <Input
-                        type="number"
-                        defaultValue={stone.stock || 0}
-                        className={cn(
-                          "w-16 mx-auto text-center h-8 rounded-none border-0 p-0 focus:ring-0 bg-transparent transition-colors font-technical",
-                          (stone.stock || 0) < 10
-                            ? "text-lebedeva-gold font-bold"
-                            : "text-gray-600 hover:bg-gray-50 focus:bg-white"
-                        )}
-                        onClick={(e) => e.stopPropagation()}
-                        onBlur={(e) =>
-                          handleStockUpdate(
-                            stone.id,
-                            stone.type,
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.currentTarget.blur();
-                          }
-                        }}
-                      />
+                      editableStockId === stone.id ? (
+                        <Input
+                          type="number"
+                          autoFocus
+                          defaultValue={stone.stock || 0}
+                          className="w-16 mx-auto text-center h-8 rounded-none border-0 p-0 focus:ring-0 bg-white transition-colors font-technical shadow-sm"
+                          onClick={(e) => e.stopPropagation()}
+                          onBlur={(e) => {
+                            handleStockUpdate(
+                              stone.id,
+                              stone.type,
+                              e.target.value
+                            );
+                            setEditableStockId(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            "cursor-pointer hover:bg-gray-50 px-2 py-1 transition-colors block w-full",
+                            (stone.stock || 0) < 10
+                              ? "text-lebedeva-gold font-bold"
+                              : "text-gray-600"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditableStockId(stone.id);
+                          }}
+                        >
+                          {stone.stock || 0}
+                        </span>
+                      )
                     ) : (
                       <span className="text-gray-300 text-xs">—</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-right font-technical flex items-center justify-end gap-2">
+                  <td className="py-6 px-4 text-right font-technical font-light flex items-center justify-end gap-2">
                     <div
                       className={cn(
                         "relative group/price flex items-center justify-end",
@@ -368,7 +411,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                       )}
                     </button>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-6 px-4 text-center">
                     <Button
                       variant="ghost"
                       size="icon"
