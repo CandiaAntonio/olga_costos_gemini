@@ -47,17 +47,25 @@ model Depreciacion {
 
 // ==================== MATERIALES E INVENTARIO ====================
 
+// ==================== MATERIALES E INVENTARIO ====================
+
 model TipoPiedra {
   id          String        @id @default(cuid())
   nombre      String        @unique // "Diamante", "Esmeralda", "Rubí"
   precioCop   Float         // Precio en COP
   esNatural   Boolean       @default(true)
   categoria   String?       // "preciosa", "semipreciosa", "sintética"
+  inventoryType String      @default("LOT") // "LOT" or "UNIQUE" (SQLite restriction on Enums)
   descripcion String?
   activo      Boolean       @default(true)
   creadoEn    DateTime      @default(now())
+  
   piezaPiedras PiezaPiedra[]
+  piedrasIndividuales PiedraIndividual[]
 }
+
+// enum InventoryType removed for SQLite support
+// Valid values: LOT, UNIQUE
 
 model Esmalte {
   id              String   @id @default(cuid())
@@ -72,6 +80,33 @@ model Esmalte {
   creadoEn        DateTime @default(now())
 }
 
+model PiedraIndividual {
+  id             String   @id @default(cuid())
+  tipoPiedraId   String
+  tipoPiedra     TipoPiedra @relation(fields: [tipoPiedraId], references: [id])
+  
+  codigo         String?  @unique // Identificador único (ej: RUB-001)
+  
+  // Atributos específicos
+  pesoCarats     Float?
+  tamano         String?
+  claridad       String?
+  color          String?
+  
+  costo          Float    // Costo específico d esta piedra
+  ubicacion      String?  // Ej: "Caja Fuerte", "Vitrina"
+  
+  estado         String   @default("disponible") // disponible, reservado, vendido, usado
+  
+  // Relación con Pieza (Uso)
+  piezaPiedra    PiezaPiedra?
+  
+  creadoEn       DateTime @default(now())
+  actualizadoEn  DateTime @updatedAt
+  
+  @@index([tipoPiedraId])
+}
+
 // ==================== PIEZAS Y PRODUCCIÓN ====================
 
 model Pieza {
@@ -82,7 +117,7 @@ model Pieza {
   coleccion      String?
   material       String        @default("plata") // "plata", "oro"
   pesoGramos     Float
-
+  
   // Metal del padre (50% ganancia si usa)
   esMetalPropio  Boolean       @default(true)
 
@@ -138,6 +173,10 @@ model PiezaPiedra {
   pieza          Pieza      @relation(fields: [piezaId], references: [id], onDelete: Cascade)
   tipoPiedraId   String
   tipoPiedra     TipoPiedra @relation(fields: [tipoPiedraId], references: [id])
+  
+  // Link opcional a piedra única
+  piedraIndividualId String? @unique
+  piedraIndividual   PiedraIndividual? @relation(fields: [piedraIndividualId], references: [id])
 
   cantidad       Int
   esPrincipal    Boolean    @default(true) // Principal vs secundaria

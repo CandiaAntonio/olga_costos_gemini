@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from "@/lib/db";
 
 /**
  * Calcula el PCG (Precio Costo Gramo)
@@ -6,39 +6,92 @@ import { prisma } from '@/lib/db'
  */
 export async function calcularPCG(): Promise<number> {
   // Obtener configuración global
-  const config = await prisma.configuracionGlobal.findFirst()
-  const gramosProducidosMes = config?.gramosProducidosMes ?? 509
+  const config = await prisma.configuracionGlobal.findFirst();
+  const gramosProducidosMes = config?.gramosProducidosMes ?? 509;
 
   // Sumar todos los costos fijos activos
   const costosFijos = await prisma.costoFijo.findMany({
-    where: { activo: true }
-  })
-  const totalCostosFijos = costosFijos.reduce((sum, c) => sum + c.valor, 0)
+    where: { activo: true },
+  });
+  const totalCostosFijos = costosFijos.reduce((sum, c) => sum + c.valor, 0);
 
   // Sumar todas las depreciaciones activas
   const depreciaciones = await prisma.depreciacion.findMany({
-    where: { activo: true }
-  })
-  const totalDepreciaciones = depreciaciones.reduce((sum, d) => sum + d.valorMensual, 0)
+    where: { activo: true },
+  });
+  const totalDepreciaciones = depreciaciones.reduce(
+    (sum, d) => sum + d.valorMensual,
+    0
+  );
 
-  const totalMensual = totalCostosFijos + totalDepreciaciones
+  const totalMensual = totalCostosFijos + totalDepreciaciones;
 
-  return totalMensual / gramosProducidosMes
+  return totalMensual / gramosProducidosMes;
 }
 
+import { getLatestPrice } from "@/lib/market-db";
+
 /**
- * Calcula el costo total de una pieza
+ * Calcula el costo total de una pieza usando precios de mercado en vivo
+ * Formula Artesanal: (Peso * PrecioMetal) + (Peso * PCG) + Piedras + Esmalte + Etapas
  */
-export function calcularCostoTotal(params: {
-  pesoGramos: number
-  pcg: number
-  costoPiedras: number
-  costoEsmalte: number
-  costoEtapas: number
-}): number {
-  const { pesoGramos, pcg, costoPiedras, costoEsmalte, costoEtapas } = params
-  const costoMaterial = pesoGramos * pcg
-  return costoMaterial + costoPiedras + costoEsmalte + costoEtapas
+export async function calcularCostoTotal(params: {
+  pesoGramos: number;
+  pcg: number; // Puede venir pre-calculado o ser ignorado si calculamos todo dentro (se mantiene por compatibilidad si se pasa)
+  costoPiedras: number;
+  costoEsmalte: number;
+  costoEtapas: number;
+  metalType?: "silver" | "gold"; // Default: 'silver'
+}): Promise<number> {
+  const {
+    pesoGramos,
+    pcg,
+    costoPiedras,
+    costoEsmalte,
+    costoEtapas,
+    metalType = "silver",
+  } = params;
+
+  // 1. Obtener precio del metal y tasa de cambio
+  const symbol = metalType === "gold" ? "XAU" : "XAG";
+
+  // Paralelizar llamadas a DB
+  const [metalPriceDb, usdRateDb, config] = await Promise.all([
+    getLatestPrice(symbol),
+    getLatestPrice("USD"),
+    prisma.configuracionGlobal.findFirst(),
+  ]);
+
+  // Fallback defaults (Safety Guardrails)
+  // USD Default: 4000 COP (si falla DB)
+  // Silver Default: ~32 USD/oz (aprox, solo si falla todo)
+  const tasaDeCambio = usdRateDb?.price ?? config?.tipoCambio ?? 4000;
+
+  // Precio Metal en USD por Onza TROY
+  // Si no hay dato de mercado, usamos un valor "seguro" alto para alertar o el del config si existiera
+  let precioMetalUsdOz = metalPriceDb?.price ?? 0;
+  if (precioMetalUsdOz === 0) {
+    // Si no hay precio de mercado, REVISAR si deberíamos fallar o usar una constante
+    // Por ahora usamos una constante de referencia alta para no romper el cálculo a 0
+    precioMetalUsdOz = metalType === "gold" ? 2000 : 30;
+  }
+
+  // Conversión a COP por Gramo
+  // 1 Onza Troy = 31.1035 gramos
+  const precioMetalCopGramo = (precioMetalUsdOz / 31.1035) * tasaDeCambio;
+
+  // 2. Costo Material (Variable)
+  const costoMaterial = pesoGramos * precioMetalCopGramo;
+
+  // 3. Costo Overhead (Fijo por gramo - PCG)
+  // Usamos el PCG pasado por parámetro o lo calculamos fresco si fuera necesario.
+  // La firma actual recibe PCG, asumimos que viene de calcularPCG().
+  const costoOverhead = pesoGramos * pcg;
+
+  // 4. Sumatoria Final
+  return (
+    costoMaterial + costoOverhead + costoPiedras + costoEsmalte + costoEtapas
+  );
 }
 
 /**
@@ -50,17 +103,18 @@ export function calcularPrecios(
   impuesto: number = 0.19
 ): { precioSugerido: number; descuentoMaximo: number } {
   // Precio = Costo / (1 - margen) * (1 + impuesto)
-  const precioBase = costoTotal / (1 - margenGanancia)
-  const precioSugerido = precioBase * (1 + impuesto)
+  const precioBase = costoTotal / (1 - margenGanancia);
+  const precioSugerido = precioBase * (1 + impuesto);
 
   // Descuento máximo = hasta el punto de equilibrio (costo + impuesto)
-  const puntoEquilibrio = costoTotal * (1 + impuesto)
-  const descuentoMaximo = ((precioSugerido - puntoEquilibrio) / precioSugerido) * 100
+  const puntoEquilibrio = costoTotal * (1 + impuesto);
+  const descuentoMaximo =
+    ((precioSugerido - puntoEquilibrio) / precioSugerido) * 100;
 
   return {
     precioSugerido: Math.round(precioSugerido),
-    descuentoMaximo: Math.round(descuentoMaximo * 10) / 10
-  }
+    descuentoMaximo: Math.round(descuentoMaximo * 10) / 10,
+  };
 }
 
 /**
@@ -71,21 +125,21 @@ export function calcularGanancia(
   costoTotal: number,
   esMetalPropio: boolean
 ): { gananciaTotal: number; gananciaPapa: number; gananciaNeta: number } {
-  const gananciaTotal = precioVenta - costoTotal
+  const gananciaTotal = precioVenta - costoTotal;
 
   if (esMetalPropio) {
-    return { gananciaTotal, gananciaPapa: 0, gananciaNeta: gananciaTotal }
+    return { gananciaTotal, gananciaPapa: 0, gananciaNeta: gananciaTotal };
   }
 
   // Si usa metal del padre: 50% de la ganancia es para él
-  const gananciaPapa = gananciaTotal * 0.5
-  const gananciaNeta = gananciaTotal - gananciaPapa
+  const gananciaPapa = gananciaTotal * 0.5;
+  const gananciaNeta = gananciaTotal - gananciaPapa;
 
   return {
     gananciaTotal: Math.round(gananciaTotal),
     gananciaPapa: Math.round(gananciaPapa),
-    gananciaNeta: Math.round(gananciaNeta)
-  }
+    gananciaNeta: Math.round(gananciaNeta),
+  };
 }
 
 /**
@@ -93,16 +147,16 @@ export function calcularGanancia(
  */
 export function convertirAGramos(cantidad: number, unidad: string): number {
   const conversiones: Record<string, number> = {
-    'kg': 1000,
-    'g': 1,
-    '20g': 20,
-    '30g': 30,
-    '1oz': 28.3495,
-    'oz': 28.3495
-  }
+    kg: 1000,
+    g: 1,
+    "20g": 20,
+    "30g": 30,
+    "1oz": 28.3495,
+    oz: 28.3495,
+  };
 
-  const factor = conversiones[unidad.toLowerCase()] || 1
-  return cantidad * factor
+  const factor = conversiones[unidad.toLowerCase()] || 1;
+  return cantidad * factor;
 }
 
 /**
@@ -113,8 +167,8 @@ export function calcularPrecioPorGramo(
   cantidad: number,
   unidad: string
 ): number {
-  const gramos = convertirAGramos(cantidad, unidad)
-  return precioCompra / gramos
+  const gramos = convertirAGramos(cantidad, unidad);
+  return precioCompra / gramos;
 }
 
 /**
@@ -122,57 +176,82 @@ export function calcularPrecioPorGramo(
  * Formato: TIPO-MAT-PESO-PIEDRA1-PIEDRA2-NUM
  */
 export function generarCodigoPieza(params: {
-  tipoJoya: string
-  material: string
-  pesoGramos: number
-  piedras: Array<{ tipo: string; cantidad: number }>
-  numeroInventario: number
+  tipoJoya: string;
+  material: string;
+  pesoGramos: number;
+  piedras: Array<{ tipo: string; cantidad: number }>;
+  numeroInventario: number;
 }): string {
-  const { tipoJoya, material, pesoGramos, piedras, numeroInventario } = params
+  const { tipoJoya, material, pesoGramos, piedras, numeroInventario } = params;
 
   // Mapeo de tipos de joya a códigos
   const tiposCodigo: Record<string, string> = {
-    'aretes': 'AR',
-    'anillo': 'AN',
-    'collar': 'CO',
-    'brazalete': 'BR',
-    'dije': 'DJ',
-    'broche': 'BC'
-  }
+    aretes: "AR",
+    anillo: "AN",
+    collar: "CO",
+    brazalete: "BR",
+    dije: "DJ",
+    broche: "BC",
+  };
 
   // Mapeo de materiales
   const materialesCodigo: Record<string, string> = {
-    'plata': 'PL',
-    'oro': 'OR'
-  }
+    plata: "PL",
+    oro: "OR",
+  };
 
-  const tipo = tiposCodigo[tipoJoya.toLowerCase()] || tipoJoya.slice(0, 2).toUpperCase()
-  const mat = materialesCodigo[material.toLowerCase()] || material.slice(0, 2).toUpperCase()
-  const peso = Math.round(pesoGramos)
+  const tipo =
+    tiposCodigo[tipoJoya.toLowerCase()] || tipoJoya.slice(0, 2).toUpperCase();
+  const mat =
+    materialesCodigo[material.toLowerCase()] ||
+    material.slice(0, 2).toUpperCase();
+  const peso = Math.round(pesoGramos);
 
   // Códigos de piedras
-  const piedrasCodigo = piedras.map(p => {
-    const codigo = p.tipo.slice(0, 2).toUpperCase()
-    return `${codigo}${p.cantidad}`
-  }).join('-')
+  const piedrasCodigo = piedras
+    .map((p) => {
+      const codigo = p.tipo.slice(0, 2).toUpperCase();
+      return `${codigo}${p.cantidad}`;
+    })
+    .join("-");
 
-  const num = numeroInventario.toString().padStart(3, '0')
+  const num = numeroInventario.toString().padStart(3, "0");
 
   return piedrasCodigo
     ? `${tipo}-${mat}-${peso}G-${piedrasCodigo}-${num}`
-    : `${tipo}-${mat}-${peso}G-${num}`
+    : `${tipo}-${mat}-${peso}G-${num}`;
 }
 
 /**
  * Constantes de etapas de producción
  */
 export const ETAPAS_PRODUCCION = [
-  { numero: 1, nombre: 'Diseño', descripcion: 'Electricidad, computación, tiempo dedicado' },
-  { numero: 2, nombre: 'Impresión 3D', descripcion: 'Costo de resina utilizada' },
-  { numero: 3, nombre: 'Fundición', descripcion: 'Servicio externo' },
-  { numero: 4, nombre: 'Preparación Esmaltado', descripcion: 'Tiempo y materiales de preparación' },
-  { numero: 5, nombre: 'Esmaltado', descripcion: 'Aplicación de esmaltes (3-4g por pieza)' },
-  { numero: 6, nombre: 'Acabado', descripcion: 'Brocas, seguetas, ácido' },
-  { numero: 7, nombre: 'Engaste de Piedras', descripcion: 'Colocación de piedras preciosas' },
-  { numero: 8, nombre: 'Pulido', descripcion: 'Materiales de pulido final' }
-] as const
+  {
+    numero: 1,
+    nombre: "Diseño",
+    descripcion: "Electricidad, computación, tiempo dedicado",
+  },
+  {
+    numero: 2,
+    nombre: "Impresión 3D",
+    descripcion: "Costo de resina utilizada",
+  },
+  { numero: 3, nombre: "Fundición", descripcion: "Servicio externo" },
+  {
+    numero: 4,
+    nombre: "Preparación Esmaltado",
+    descripcion: "Tiempo y materiales de preparación",
+  },
+  {
+    numero: 5,
+    nombre: "Esmaltado",
+    descripcion: "Aplicación de esmaltes (3-4g por pieza)",
+  },
+  { numero: 6, nombre: "Acabado", descripcion: "Brocas, seguetas, ácido" },
+  {
+    numero: 7,
+    nombre: "Engaste de Piedras",
+    descripcion: "Colocación de piedras preciosas",
+  },
+  { numero: 8, nombre: "Pulido", descripcion: "Materiales de pulido final" },
+] as const;
