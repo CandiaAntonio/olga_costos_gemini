@@ -42,6 +42,22 @@ export function MarketHistoryChart({
   const [data, setData] = useState<{ date: Date; price: number }[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Dynamic Color Logic
+  const getChartColor = (symbol: string) => {
+    switch (symbol) {
+      case "XAU":
+        return "#B8860B"; // Gold
+      case "XAG":
+        return "#94A3B8"; // Silver/Gray (Slate-400)
+      case "USD":
+        return "#16A34A"; // Success Green (Green-600)
+      default:
+        return "#B8860B"; // Default to Gold
+    }
+  };
+
+  const chartColor = getChartColor(selectedItem.symbol);
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -128,9 +144,14 @@ export function MarketHistoryChart({
               onClick={() => onRangeChange(r)}
               className={`rounded-none px-4 font-light text-xs transition-all duration-300 ${
                 range === r
-                  ? "bg-lebedeva-gold hover:bg-[#9a7009] text-white ring-0"
-                  : "border-stone-200 text-stone-600 hover:bg-stone-50 hover:text-lebedeva-gold"
+                  ? "text-white ring-0"
+                  : "border-stone-200 text-stone-600 hover:bg-stone-50"
               }`}
+              style={{
+                backgroundColor: range === r ? chartColor : undefined,
+                color: range === r ? "#fff" : undefined,
+                borderColor: range !== r ? undefined : "transparent",
+              }}
             >
               {r}
             </Button>
@@ -140,7 +161,10 @@ export function MarketHistoryChart({
       <CardContent className="pt-8">
         <div className="h-[350px] w-full">
           {loading ? (
-            <div className="h-full w-full flex items-center justify-center text-lebedeva-gold font-light animate-pulse">
+            <div
+              className="h-full w-full flex items-center justify-center font-light animate-pulse"
+              style={{ color: chartColor }}
+            >
               Cargando datos...
             </div>
           ) : (
@@ -153,8 +177,12 @@ export function MarketHistoryChart({
               >
                 <defs>
                   <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#b8860b" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#b8860b" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor={chartColor}
+                      stopOpacity={0.1}
+                    />
+                    <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -202,7 +230,7 @@ export function MarketHistoryChart({
                     padding: "8px 12px",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
                   }}
-                  itemStyle={{ color: "#b8860b" }}
+                  itemStyle={{ color: chartColor }}
                   formatter={(value: any) => [
                     formatPrice(Number(value)),
                     "Precio",
@@ -219,11 +247,11 @@ export function MarketHistoryChart({
                 <Area
                   type="monotone"
                   dataKey="price"
-                  stroke="#b8860b"
+                  stroke={chartColor}
                   strokeWidth={1.5}
                   fillOpacity={1}
                   fill="url(#colorPrice)"
-                  activeDot={{ r: 4, strokeWidth: 0, fill: "#b8860b" }}
+                  activeDot={{ r: 4, strokeWidth: 0, fill: chartColor }}
                 />
               </AreaChart>
             </ResponsiveContainer>
