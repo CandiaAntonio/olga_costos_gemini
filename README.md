@@ -6,21 +6,22 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
 
 - **Costeo por 8 Etapas de Producción**: Diseño, Impresión 3D, Fundición, Preparación Esmaltado, Esmaltado, Acabado, Engaste de Piedras, Pulido
 - **Cálculo Automático de PCG**: Precio Costo por Gramo basado en costos fijos y depreciación
-- **Gestión de Inventario**: Piedras preciosas/semipreciosas y esmaltes
+- **Gestión de Inventario**: Tablas de alta precisión para Piedras (Lotes/Únicas) y esmaltes. Soporte para edición en línea.
+- **Logica de Identificación**: Sistema de IDs inteligentes `[TrackingType][Category][Serial]` (ej. LDIA001).
 - **Precios Sugeridos**: Cálculo automático con margen de ganancia e impuestos
 - **Descuento Máximo**: Cálculo del descuento máximo sin pérdida
 - **División de Ganancias**: Soporte para metal propio vs. metal del padre (50%)
 
 ## Tech Stack
 
-| Tecnología | Uso |
-|------------|-----|
-| Next.js 14 | Framework React con App Router |
-| TypeScript | Tipado estático |
-| Prisma 5 | ORM para base de datos |
-| SQLite | Base de datos local |
-| Tailwind CSS 4 | Estilos |
-| Lucide React | Iconos |
+| Tecnología     | Uso                            |
+| -------------- | ------------------------------ |
+| Next.js 14     | Framework React con App Router |
+| TypeScript     | Tipado estático                |
+| Prisma 5       | ORM para base de datos         |
+| SQLite         | Base de datos local            |
+| Tailwind CSS 4 | Estilos                        |
+| Lucide React   | Iconos                         |
 
 ## Requisitos
 
@@ -30,22 +31,26 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
 ## Instalación
 
 1. **Clonar el repositorio**
+
    ```bash
    git clone https://github.com/CandiaAntonio/olga_costos.git
    cd olga_costos
    ```
 
 2. **Instalar dependencias**
+
    ```bash
    npm install
    ```
 
 3. **Configurar variables de entorno**
+
    ```bash
    cp .env.example .env
    ```
 
 4. **Inicializar base de datos**
+
    ```bash
    npx prisma generate
    npx prisma db push
@@ -53,6 +58,7 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
    ```
 
 5. **Iniciar servidor de desarrollo**
+
    ```bash
    npm run dev
    ```
@@ -64,12 +70,12 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
 
 ## Scripts Disponibles
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Build de producción |
-| `npm run start` | Servidor de producción |
-| `npm run lint` | Verificar código |
+| Comando           | Descripción                  |
+| ----------------- | ---------------------------- |
+| `npm run dev`     | Servidor de desarrollo       |
+| `npm run build`   | Build de producción          |
+| `npm run start`   | Servidor de producción       |
+| `npm run lint`    | Verificar código             |
 | `npm run db:seed` | Poblar base de datos inicial |
 
 ## Estructura del Proyecto
@@ -139,6 +145,7 @@ Ganancia (metal padre) = (Precio - Costo) × 0.5
 ## Datos de Migración
 
 El sistema incluye migración automática desde el Excel original:
+
 - 15 tipos de piedras con precios en USD
 - 14 costos fijos mensuales
 - 2 depreciaciones (herramientas, oficina)
