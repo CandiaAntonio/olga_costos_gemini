@@ -1,37 +1,52 @@
 @import "tailwindcss";
 
 /* Fuentes de Lebedeva Jewelry */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Comfortaa:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Comfortaa:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+
+@theme {
+  --color-lebedeva-black: #000000;
+  --color-lebedeva-white: #ffffff;
+  --color-lebedeva-gold: #b8860b;
+  --color-lebedeva-soft-silk: #fafafa;
+  --color-lebedeva-gray: #f0f0f0;
+  --color-lebedeva-dark-gray: #333333;
+
+  --font-cormorant: "Cormorant", serif;
+  --font-comfortaa: "Comfortaa", sans-serif;
+  --font-inter: "Inter", sans-serif;
+}
 
 :root {
-  /* Paleta Lebedeva Jewelry */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 0%;
-  --card: 0 0% 100%;
+  /* Paleta Lebedeva Jewelry - Luxury Define */
+  --background: 0 0% 98%; /* #FAFAFA - Soft Silk */
+  --foreground: 0 0% 0%; /* #000000 - Deep Black */
+
+  --card: 0 0% 100%; /* White cards to pop against Soft Silk */
   --card-foreground: 0 0% 0%;
+
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 0%;
-  --primary: 0 0% 0%;
+
+  --primary: 43 89% 38%; /* #b8860b - Lebedeva Gold */
   --primary-foreground: 0 0% 100%;
+
   --secondary: 0 0% 96%;
   --secondary-foreground: 0 0% 20%;
+
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 40%;
+
   --accent: 0 0% 96%;
   --accent-foreground: 0 0% 0%;
+
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
+
   --border: 0 0% 90%;
   --input: 0 0% 90%;
-  --ring: 0 0% 0%;
-  --radius: 0.25rem;
+  --ring: 43 89% 38%; /* Gold Ring */
 
-  /* Colores específicos */
-  --lebedeva-black: #000000;
-  --lebedeva-white: #ffffff;
-  --lebedeva-gray: #f0f0f0;
-  --lebedeva-dark-gray: #333333;
-  --lebedeva-gold: #b8860b;
+  --radius: 0.25rem;
 }
 
 * {
@@ -39,60 +54,87 @@
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: 'Inter', sans-serif;
+  background-color: #fafafa; /* Soft Silk */
+  color: #000000;
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Cormorant', serif;
+/* Luxury Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cormorant", serif;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em; /* Increased tracking for exclusivity */
+  color: #000000;
+}
+
+.font-technical {
+  font-family: "Comfortaa", sans-serif;
 }
 
 /* Estilos elegantes para inputs */
-input, select, textarea {
-  font-family: 'Comfortaa', sans-serif;
+input,
+select,
+textarea {
+  font-family: "Comfortaa", sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.02em;
 }
 
 /* Separador decorativo estilo Lebedeva */
 .lebedeva-divider {
   height: 1px;
-  background: linear-gradient(to right, transparent, #333333, transparent);
+  background: linear-gradient(
+    to right,
+    transparent,
+    #b8860b,
+    transparent
+  ); /* Gold gradient */
+  opacity: 0.3;
   margin: 1.5rem 0;
 }
 
 /* Botones estilo Lebedeva */
 .btn-lebedeva {
-  font-family: 'Cormorant', serif;
+  font-family: "Cormorant", serif;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 500;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 /* Links elegantes */
 a {
-  transition: opacity 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 a:hover {
   opacity: 0.7;
+  color: #b8860b; /* Gold hover */
 }
 
-/* Scrollbar minimalista */
+/* Scrollbar minimalista ultra-thin */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0f0f0;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 3px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #000000;
+  background: #b8860b; /* Gold on hover */
 }
