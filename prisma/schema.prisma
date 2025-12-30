@@ -50,22 +50,32 @@ model Depreciacion {
 // ==================== MATERIALES E INVENTARIO ====================
 
 model TipoPiedra {
-  id          String        @id @default(cuid())
-  nombre      String        @unique // "Diamante", "Esmeralda", "Rubí"
-  precioCop   Float         // Precio en COP
-  esNatural   Boolean       @default(true)
-  categoria   String?       // "preciosa", "semipreciosa", "sintética"
-  inventoryType String      @default("LOT") // "LOT" or "UNIQUE" (SQLite restriction on Enums)
-  descripcion String?
-  activo      Boolean       @default(true)
-  creadoEn    DateTime      @default(now())
+  id            String        @id @default(cuid())
+  nombre        String        @unique // "Diamante", "Esmeralda", "Rubí"
+  precioCop     Float         // Precio en COP
+  esNatural     Boolean       @default(true)
+  categoria     String?       // "preciosa", "semipreciosa", "sintética"
+  
+  // Stone Tracking Configuration
+  trackingType  String        @default("LOT") // "LOT" or "UNIQUE" (Mapped from StoneTracking)
+  
+  // Lot Specific Fields
+  stockActual   Int?          @default(0)     // Only for LOT
+  sizeMm        Float?        // Only for LOT (e.g., 1.0, 1.5)
+  
+  descripcion   String?
+  activo        Boolean       @default(true)
+  creadoEn      DateTime      @default(now())
   
   piezaPiedras PiezaPiedra[]
   piedrasIndividuales PiedraIndividual[]
 }
 
-// enum InventoryType removed for SQLite support
-// Valid values: LOT, UNIQUE
+// Emulated Enum for SQLite
+// enum StoneTracking {
+//   LOT
+//   UNIQUE
+// }
 
 model Esmalte {
   id              String   @id @default(cuid())
@@ -85,15 +95,19 @@ model PiedraIndividual {
   tipoPiedraId   String
   tipoPiedra     TipoPiedra @relation(fields: [tipoPiedraId], references: [id])
   
-  codigo         String?  @unique // Identificador único (ej: RUB-001)
+  // Unique Identification
+  codigo            String?  @unique // Identificador único (ej: RUB-001)
+  certificateNumber String?  // Certificado GIA/IGL etc.
   
-  // Atributos específicos
-  pesoCarats     Float?
-  tamano         String?
-  claridad       String?
-  color          String?
+  // Gemological Properties
+  carats         Float?   // Peso específico
+  clarity        String?  // IF, VVS1, VS1...
+  color          String?  // D, E, F... or "Pigeon Blood"
+  shape          String?  // Round, Oval, Emerald...
+  treatment      String?  // Heated, Filled, None
+  origin         String?  // Colombia, Burma, etc.
   
-  costo          Float    // Costo específico d esta piedra
+  costo          Float    // Costo específico de esta piedra en COP
   ubicacion      String?  // Ej: "Caja Fuerte", "Vitrina"
   
   estado         String   @default("disponible") // disponible, reservado, vendido, usado

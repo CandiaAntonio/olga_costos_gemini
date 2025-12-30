@@ -55,11 +55,17 @@ async function main() {
       piedra.nombre.includes("Laboratorio") ||
       piedra.nombre.includes("Sintética");
 
+    // Extract size from name if possible (e.g. "CZ 1mm")
+    let sizeMm: number | null = null;
+    if (piedra.nombre.includes("1mm")) sizeMm = 1.0;
+
     await prisma.tipoPiedra.upsert({
       where: { nombre: piedra.nombre },
       update: {
         precioCop: piedra.precio,
-        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
+        trackingType: isSynthetic ? "LOT" : "UNIQUE",
+        stockActual: isSynthetic ? 1000 : undefined, // Initialize stock for lots
+        sizeMm: sizeMm ?? undefined,
       },
       create: {
         nombre: piedra.nombre,
@@ -70,7 +76,9 @@ async function main() {
           : piedra.precio >= 50000
           ? "preciosa"
           : "semipreciosa",
-        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
+        trackingType: isSynthetic ? "LOT" : "UNIQUE",
+        stockActual: isSynthetic ? 1000 : null,
+        sizeMm: sizeMm,
       },
     });
   }
