@@ -123,7 +123,7 @@ export async function updateMarketDataIfNeeded(force: boolean = false) {
           : "Fetching fresh market data from Yahoo..."
       );
 
-      // Fetch Quote
+      // Fetch Quote (Latest)
       const [gold, silver, usd] = await Promise.all([
         yahooFinance.quote("GC=F"), // Gold
         yahooFinance.quote("SI=F"), // Silver
@@ -134,13 +134,6 @@ export async function updateMarketDataIfNeeded(force: boolean = false) {
         if (!quote || !quote.regularMarketPrice) return;
 
         const date = quote.regularMarketTime || new Date();
-
-        // We use upsert on regularMarketTime (or simple date) to avoid dups if run freq
-        // But since Yahoo might return same time, we'll try upsert.
-        // Actually our schema is unique on [symbol, date].
-        // Yahoo dates are timestamps. We probably want to normalize to Day for history, but keep precise for latest?
-        // The schema `date` is DateTime.
-        // Let's just save.
 
         await prisma.marketPrice.upsert({
           where: {
@@ -154,8 +147,7 @@ export async function updateMarketDataIfNeeded(force: boolean = false) {
             open: quote.regularMarketOpen,
             high: quote.regularMarketDayHigh,
             low: quote.regularMarketDayLow,
-            close: quote.regularMarketPreviousClose, // Using prevClose as close? No, close is current for history.
-            // For TODAY, price is current.
+            close: quote.regularMarketPreviousClose,
             createdAt: new Date(),
           },
           create: {
@@ -176,11 +168,80 @@ export async function updateMarketDataIfNeeded(force: boolean = false) {
         save(silver, "XAG", "USD"),
         save(usd, "USD", "COP"),
       ]);
+
+      // If forced, also sync history to ensure DB is correct
+      if (force) {
+        await syncHistoricalData();
+      }
+
       console.log("Market data updated.");
     }
   } catch (e) {
     console.error("Error updating market data:", e);
   }
+}
+
+async function syncHistoricalData() {
+  console.log("Syncing historical data from Yahoo Finance...");
+  const symbols = [
+    { yahoo: "GC=F", db: "XAU", currency: "USD" },
+    { yahoo: "SI=F", db: "XAG", currency: "USD" },
+    { yahoo: "COP=X", db: "USD", currency: "COP" },
+  ];
+
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setFullYear(startDate.getFullYear() - 1); // Fetch last 1 year
+
+  for (const s of symbols) {
+    try {
+      console.log(`fetching history for ${s.db}...`);
+
+      // 1. Fetch fresh history FIRST (Safety)
+      const history = (await yahooFinance.historical(s.yahoo, {
+        period1: startDate,
+        period2: endDate,
+        interval: "1d",
+      })) as unknown as any[];
+
+      console.log(`Fetched ${history.length} days of history for ${s.db}`);
+
+      if (!history || history.length === 0) {
+        console.warn(`No history returned for ${s.db}, skipping update.`);
+        continue;
+      }
+
+      // 2. Prepare data
+      const dataToCreate = history
+        .map((row: any) => {
+          const price = row.close || row.adjClose || 0;
+          if (!price) return null;
+          return {
+            symbol: s.db,
+            date: row.date,
+            price: price,
+            currency: s.currency,
+            open: row.open,
+            high: row.high,
+            low: row.low,
+            close: row.close || price,
+          };
+        })
+        .filter((x: any) => x !== null) as any[];
+
+      // 3. Transaction: Purge & Insert
+      await prisma.$transaction([
+        prisma.marketPrice.deleteMany({ where: { symbol: s.db } }),
+        prisma.marketPrice.createMany({ data: dataToCreate }),
+      ]);
+      console.log(
+        `Successfully synced ${dataToCreate.length} records for ${s.db}`
+      );
+    } catch (error) {
+      console.error(`Failed to sync history for ${s.db}`, error);
+    }
+  }
+  console.log("Historical data sync complete.");
 }
 
 export async function getMarketChanges(range: import("./market-db").TimeRange) {
