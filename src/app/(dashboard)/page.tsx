@@ -74,7 +74,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-normal text-gray-500 uppercase tracking-widest">
-              Tipos de Piedras
+              Tipos de Gemas
             </CardTitle>
             <Gem className="h-5 w-5 text-gray-300" />
           </CardHeader>
