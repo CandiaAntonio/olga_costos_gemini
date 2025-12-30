@@ -39,7 +39,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         ref={ref}
-        style={{ fontFamily: "Cormorant, serif", letterSpacing: "0.1em" }}
+        style={{ fontFamily: "Cormorant, serif", letterSpacing: "0.15em" }}
         {...props}
       />
     );

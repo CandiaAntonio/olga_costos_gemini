@@ -31,22 +31,18 @@ export function Sidebar() {
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
+      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-[#FAFAFA] px-6 pb-4">
         {/* Logo y Marca */}
-        <div className="flex h-24 shrink-0 items-center justify-center border-b border-gray-100">
-          <div className="text-center">
-            <h1
-              className="text-2xl tracking-[0.3em] text-black uppercase"
-              style={{ fontFamily: "Cormorant, serif" }}
-            >
-              Lebedeva
-            </h1>
-            <p
-              className="text-[10px] tracking-[0.4em] text-gray-500 uppercase mt-1"
-              style={{ fontFamily: "Comfortaa, sans-serif" }}
-            >
-              Jewelry
-            </p>
+        {/* Logo y Marca */}
+        <div className="flex shrink-0 items-center justify-center border-b border-gray-100 pb-6 pt-8">
+          <div className="relative h-[80px] w-full max-w-[200px]">
+            <Image
+              src="https://optim.tildacdn.com/tild3961-6237-4232-b431-396131393433/-/resize/604x/-/format/webp/lebedeva-logo-final-.png.webp"
+              alt="Lebedeva Jewelry"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
         </div>
 

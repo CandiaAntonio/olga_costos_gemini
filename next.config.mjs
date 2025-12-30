@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuración básica para el MVP
-}
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "optim.tildacdn.com",
+      },
+    ],
+  },
+};
 
-export default nextConfig
+export default nextConfig;

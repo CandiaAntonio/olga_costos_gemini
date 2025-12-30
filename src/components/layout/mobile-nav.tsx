@@ -1,9 +1,10 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Gem,
@@ -14,23 +15,23 @@ import {
   CalendarDays,
   Menu,
   X,
-  TrendingUp
-} from 'lucide-react'
+  TrendingUp,
+} from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Mercado', href: '/market', icon: TrendingUp },
-  { name: 'Gemas', href: '/inventario/piedras', icon: Gem },
-  { name: 'Piezas', href: '/piezas', icon: Package },
-  { name: 'Esmaltes', href: '/inventario/esmaltes', icon: Palette },
-  { name: 'Costos Fijos', href: '/costos-fijos', icon: DollarSign },
-  { name: 'Ventas', href: '/ventas', icon: CalendarDays },
-  { name: 'Configuración', href: '/configuracion', icon: Settings },
-]
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Mercado", href: "/market", icon: TrendingUp },
+  { name: "Gemas", href: "/inventario/piedras", icon: Gem },
+  { name: "Piezas", href: "/piezas", icon: Package },
+  { name: "Esmaltes", href: "/inventario/esmaltes", icon: Palette },
+  { name: "Costos Fijos", href: "/costos-fijos", icon: DollarSign },
+  { name: "Ventas", href: "/ventas", icon: CalendarDays },
+  { name: "Configuración", href: "/configuracion", icon: Settings },
+];
 
 export function MobileNav() {
-  const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="lg:hidden">
@@ -46,8 +47,8 @@ export function MobileNav() {
         </button>
         <div className="flex-1 text-center">
           <span
-            className="text-lg tracking-[0.2em] text-black uppercase"
-            style={{ fontFamily: 'Cormorant, serif' }}
+            className="text-lg tracking-[0.15em] text-black uppercase"
+            style={{ fontFamily: "Cormorant, serif" }}
           >
             Lebedeva
           </span>
@@ -75,22 +76,17 @@ export function MobileNav() {
                 </button>
               </div>
 
-              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
+              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-[#FAFAFA] px-6 pb-4">
                 {/* Logo */}
-                <div className="flex h-20 shrink-0 items-center justify-center border-b border-gray-100">
-                  <div className="text-center">
-                    <h1
-                      className="text-xl tracking-[0.3em] text-black uppercase"
-                      style={{ fontFamily: 'Cormorant, serif' }}
-                    >
-                      Lebedeva
-                    </h1>
-                    <p
-                      className="text-[9px] tracking-[0.4em] text-gray-500 uppercase mt-1"
-                      style={{ fontFamily: 'Comfortaa, sans-serif' }}
-                    >
-                      Jewelry
-                    </p>
+                <div className="flex shrink-0 items-center justify-center border-b border-gray-100 pb-6 pt-8">
+                  <div className="relative h-[80px] w-full max-w-[200px]">
+                    <Image
+                      src="https://optim.tildacdn.com/tild3961-6237-4232-b431-396131393433/-/resize/604x/-/format/webp/lebedeva-logo-final-.png.webp"
+                      alt="Lebedeva Jewelry"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
                   </div>
                 </div>
 
@@ -105,32 +101,38 @@ export function MobileNav() {
                     <li>
                       <ul role="list" className="-mx-2 space-y-1">
                         {navigation.map((item) => {
-                          const isActive = pathname === item.href ||
-                            (item.href !== '/' && pathname.startsWith(item.href))
+                          const isActive =
+                            pathname === item.href ||
+                            (item.href !== "/" &&
+                              pathname.startsWith(item.href));
                           return (
                             <li key={item.name}>
                               <Link
                                 href={item.href}
                                 onClick={() => setIsOpen(false)}
                                 className={cn(
-                                  'group flex gap-x-3 rounded-sm px-3 py-3 text-sm transition-all duration-200',
+                                  "group flex gap-x-3 rounded-sm px-3 py-3 text-sm transition-all duration-200",
                                   isActive
-                                    ? 'bg-black text-white'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                                    ? "bg-black text-white"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-black"
                                 )}
-                                style={{ fontFamily: 'Comfortaa, sans-serif' }}
+                                style={{ fontFamily: "Comfortaa, sans-serif" }}
                               >
                                 <item.icon
                                   className={cn(
-                                    'h-5 w-5 shrink-0',
-                                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-black'
+                                    "h-5 w-5 shrink-0",
+                                    isActive
+                                      ? "text-white"
+                                      : "text-gray-400 group-hover:text-black"
                                   )}
                                   aria-hidden="true"
                                 />
-                                <span className="tracking-wide">{item.name}</span>
+                                <span className="tracking-wide">
+                                  {item.name}
+                                </span>
                               </Link>
                             </li>
-                          )
+                          );
                         })}
                       </ul>
                     </li>
@@ -142,5 +144,5 @@ export function MobileNav() {
         </div>
       )}
     </div>
-  )
+  );
 }
