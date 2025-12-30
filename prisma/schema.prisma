@@ -57,7 +57,7 @@ model TipoPiedra {
   categoria     String?       // "preciosa", "semipreciosa", "sintética"
   
   // Stone Tracking Configuration
-  inventoryType  String        @default("LOT") // "LOT" or "UNIQUE" (Mapped from StoneTracking)
+  trackingType  String        @default("LOT") // "LOT" or "UNIQUE"
   
   // Lot Specific Fields
   stockActual   Int?          @default(0)     // Only for LOT
@@ -71,11 +71,8 @@ model TipoPiedra {
   piedrasIndividuales PiedraIndividual[]
 }
 
-// Emulated Enum for SQLite
-// enum StoneTracking {
-//   LOT
-//   UNIQUE
-// }
+// Enum 'TrackingType' simulated as String for SQLite
+// "LOT", "UNIQUE"
 
 model Esmalte {
   id              String   @id @default(cuid())

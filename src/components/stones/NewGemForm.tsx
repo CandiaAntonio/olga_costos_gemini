@@ -32,6 +32,9 @@ interface GemFormData {
   claridad?: string;
   color?: string;
   certificado?: string;
+  origen?: string;
+  // Lot specific
+  stockActual?: string;
 }
 
 export function NewGemForm() {
@@ -246,6 +249,30 @@ export function NewGemForm() {
                   </Label>
                 </div>
               </div>
+
+              {type === "LOT" && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="stockActual"
+                    className="text-xs uppercase tracking-wider text-gray-500"
+                  >
+                    Cantidad (Stock)
+                  </Label>
+                  <Input
+                    id="stockActual"
+                    type="number"
+                    placeholder="0"
+                    value={formData.stockActual || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stockActual: e.target.value })
+                    }
+                    className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
+                  />
+                  <p className="text-[10px] text-lebedeva-gold">
+                    * Se sumará al inventario existente si el nombre coincide.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="lebedeva-divider" />
@@ -306,6 +333,26 @@ export function NewGemForm() {
                       value={formData.claridad}
                       onChange={(e) =>
                         setFormData({ ...formData, claridad: e.target.value })
+                      }
+                      className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="origen"
+                      className="text-xs uppercase tracking-wider text-gray-500"
+                    >
+                      Origen
+                    </Label>
+                    <Input
+                      id="origen"
+                      placeholder="Ej: Colombia"
+                      value={formData.origen || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          origen: e.target.value,
+                        })
                       }
                       className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
                     />

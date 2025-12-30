@@ -27,29 +27,50 @@ async function main() {
   });
 
   // 2. Migrar tipos de piedras desde el Excel (U2:V17)
-  console.log("💎 Migrando tipos de piedras...");
-  const costosDirectos = workbook.Sheets["Costo Directos"];
+  // 2. Migrar tipos de piedras desde el Excel (U2:V250)
+  console.log("💎 Migrando tipos de piedras desde Excel...");
+  const sheet = workbook.Sheets["Costo Directos"];
 
-  // Leer manualmente las celdas U2:V17
-  const piedrasData = [
-    { nombre: "Diamante", precio: 75000 },
-    { nombre: "Esmeralda", precio: 38000 },
-    { nombre: "Rubí", precio: 50000 },
-    { nombre: "Zafiro", precio: 50000 },
-    { nombre: "Granate Verde", precio: 30000 },
-    { nombre: "Acuamarina", precio: 45000 },
-    { nombre: "Zafiro Paparadga", precio: 100000 },
-    { nombre: "Granate Rojo", precio: 25000 },
-    { nombre: "Amatista", precio: 25000 },
-    { nombre: "Citrino", precio: 25000 },
-    { nombre: "Peridoto", precio: 25000 },
-    { nombre: "Tanzanita", precio: 35000 },
-    { nombre: "CZ 1mm", precio: 300 },
-    { nombre: "CZ", precio: 2000 },
-    { nombre: "Corindón Laboratorio", precio: 2500 },
-  ];
+  // Rango de lectura aprox. Ajustar si la lista crece.
+  // U2 es la celda de inicio para Nombres.
+  // V2 es la celda de inicio para Precios.
 
-  for (const piedra of piedrasData) {
+  const piedrasFound = [];
+
+  // Iteramos filas hasta encontrar vacío
+  let row = 2;
+  while (true) {
+    const cellName = sheet[`U${row}`];
+    const cellPrice = sheet[`V${row}`];
+
+    if (!cellName || !cellName.v) break; // Fin de la lista
+
+    const nombre = cellName.v.toString().trim();
+    // Precio puede venir como string con caracteres, intentamos limpiar
+    let precio = 0;
+    if (cellPrice && cellPrice.v) {
+      if (typeof cellPrice.v === "number") {
+        precio = cellPrice.v;
+      } else {
+        // Limpiar "$", ",", etc si es string
+        const cleanString = cellPrice.v.toString().replace(/[^0-9.]/g, "");
+        precio = parseFloat(cleanString);
+      }
+    }
+
+    // Only add if we have a name and a valid price number
+    if (nombre && !isNaN(precio) && precio > 0) {
+      piedrasFound.push({ nombre, precio });
+    } else {
+      if (nombre)
+        console.warn(
+          `⚠️ Skipping invalid row ${row}: ${nombre} - Price: ${precio}`
+        );
+    }
+    row++;
+  }
+
+  for (const piedra of piedrasFound) {
     const isSynthetic =
       piedra.nombre.includes("CZ") ||
       piedra.nombre.includes("Laboratorio") ||
@@ -57,14 +78,17 @@ async function main() {
 
     // Extract size from name if possible (e.g. "CZ 1mm")
     let sizeMm: number | null = null;
-    if (piedra.nombre.includes("1mm")) sizeMm = 1.0;
+    const sizeMatch = piedra.nombre.match(/(\d+(\.\d+)?)mm/);
+    if (sizeMatch) {
+      sizeMm = parseFloat(sizeMatch[1]);
+    }
 
     await prisma.tipoPiedra.upsert({
       where: { nombre: piedra.nombre },
       update: {
         precioCop: piedra.precio,
-        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
-        stockActual: isSynthetic ? 1000 : undefined, // Initialize stock for lots
+        trackingType: "LOT", // Forced LOT per requirement
+        stockActual: 100, // Fixed 100 per requirement
         sizeMm: sizeMm ?? undefined,
       },
       create: {
@@ -76,13 +100,15 @@ async function main() {
           : piedra.precio >= 50000
           ? "preciosa"
           : "semipreciosa",
-        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
-        stockActual: isSynthetic ? 1000 : null,
+        trackingType: "LOT",
+        stockActual: 100,
         sizeMm: sizeMm,
       },
     });
   }
-  console.log(`  ✅ ${piedrasData.length} tipos de piedras migrados`);
+  console.log(
+    `  ✅ ${piedrasFound.length} tipos de piedras migrados desde Excel`
+  );
 
   // 3. Migrar costos fijos desde "Costos Indirectos y Fijos"
   console.log("📋 Migrando costos fijos...");

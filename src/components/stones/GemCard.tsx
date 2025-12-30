@@ -79,8 +79,16 @@ export function GemCard({ data, type }: GemCardProps) {
           ) : (
             <>
               <div className="flex justify-between border-b border-gray-100 pb-1">
-                <span className="text-gray-400">Model</span>
-                <span>Stock Lot</span>
+                <span className="text-gray-400">Stock</span>
+                <span
+                  className={
+                    (data.stockActual || 0) < 10
+                      ? "text-lebedeva-gold font-bold"
+                      : ""
+                  }
+                >
+                  {data.stockActual || 0} uds
+                </span>
               </div>
               <div className="flex justify-between border-b border-gray-100 pb-1">
                 <span className="text-gray-400">Tamaño</span>
