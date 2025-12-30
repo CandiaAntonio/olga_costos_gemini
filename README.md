@@ -144,6 +144,22 @@ Descuento Máximo = ((Precio - Costo×1.19) / Precio) × 100
 Ganancia (metal padre) = (Precio - Costo) × 0.5
 ```
 
+## Tesorería de Metales (Nuevo)
+
+El módulo de **Tesorería de Metales** introduce un sistema avanzado de control de inventario para metales preciosos (Oro y Plata).
+
+### Características Principales
+
+- **FIFO Engine**: Consumo inteligente de inventario "First-In-First-Out". El sistema utiliza automáticamente los lotes más antiguos primero para garantizar una rotación adecuada y un cálculo preciso del COGS.
+- **Mark-to-Market Valuation**: Los "Treasury Tiles" muestran el valor actual del inventario basado en los precios de mercado en tiempo real (o última cotización), permitiendo ver la plusvalía/minusvalía latente.
+- **Auditoría de Lotes**: Trazabilidad completa de cada compra de metal, incluyendo proveedor, fecha, precio de compra y saldo restante en gramos.
+
+### Flujo de Trabajo
+
+1. **Registro de Compra**: Se ingresan nuevos lotes de metal (Oro/Plata).
+2. **Valoración**: El dashboard actualiza el valor total disponible.
+3. **Consumo (Producción)**: Al crear una pieza, el sistema descuenta gramos del lote más antiguo disponible.
+
 ## Datos de Migración
 
 El sistema incluye migración automática desde el Excel original:

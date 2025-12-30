@@ -242,7 +242,11 @@ async function main() {
   await seedMarket();
   await seedHistory();
 
-  console.log("  ✅ Market seed complete");
+  // 7. Seed Metals
+  const { seedMetals } = await import("./seed-metals");
+  await seedMetals();
+
+  console.log("  ✅ Market & Metals seed complete");
 }
 
 main()

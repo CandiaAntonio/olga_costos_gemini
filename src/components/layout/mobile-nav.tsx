@@ -16,12 +16,14 @@ import {
   Menu,
   X,
   TrendingUp,
+  Coins,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Mercado", href: "/market", icon: TrendingUp },
   { name: "Gemas", href: "/inventario/piedras", icon: Gem },
+  { name: "Metales", href: "/inventario/metales", icon: Coins },
   { name: "Piezas", href: "/piezas", icon: Package },
   { name: "Esmaltes", href: "/inventario/esmaltes", icon: Palette },
   { name: "Costos Fijos", href: "/costos-fijos", icon: DollarSign },
