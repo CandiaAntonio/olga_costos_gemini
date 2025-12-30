@@ -47,7 +47,7 @@
   --input: 0 0% 90%;
   --ring: 43 89% 38%; /* Gold Ring */
 
-  --radius: 0.25rem;
+  --radius: 0;
 }
 
 * {

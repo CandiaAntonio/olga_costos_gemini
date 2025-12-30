@@ -70,3 +70,17 @@ export async function deleteStone(id: string, type: "LOT" | "UNIQUE") {
     return { success: false, error: "Failed to delete stone" };
   }
 }
+
+export async function getStoneHistory(id: string) {
+  try {
+    const history = await prisma.stockMovement.findMany({
+      where: { tipoPiedraId: id },
+      orderBy: { creadoEn: "desc" },
+      take: 10,
+    });
+    return { success: true, data: history };
+  } catch (error) {
+    console.error("Error fetching stone history:", error);
+    return { success: false, error: "Failed to fetch history" };
+  }
+}

@@ -21,8 +21,8 @@ interface StoneFiltersProps {
   onCategoryChange: (value: string) => void;
   onStoneTypeChange: (value: string) => void;
   onTrackingTypeChange: (value: string) => void;
-  isLowStock: boolean;
-  onLowStockChange: (value: boolean) => void;
+  // isLowStock: boolean; // Removed
+  // onLowStockChange: (value: boolean) => void; // Removed
 }
 
 export function StoneFilters({
@@ -35,34 +35,34 @@ export function StoneFilters({
   onCategoryChange,
   onStoneTypeChange,
   onTrackingTypeChange,
-  isLowStock,
-  onLowStockChange,
-}: StoneFiltersProps) {
+}: // isLowStock, // Removed
+// onLowStockChange, // Removed
+Omit<StoneFiltersProps, "isLowStock" | "onLowStockChange">) {
   return (
-    <div className="flex flex-col xl:flex-row gap-4 mb-8 items-center justify-between font-technical">
-      {/* Search - Minimalist & Expanded */}
-      <div className="relative w-full xl:max-w-md">
+    <div className="flex flex-col xl:flex-row gap-6 mb-8 items-end justify-between font-technical border-b border-[#F3F4F6] pb-4">
+      {/* Search - Minimalist Command Line */}
+      <div className="relative w-full xl:max-w-xl group">
         <Search
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-lebedeva-gold transition-colors"
           strokeWidth={1.5}
         />
         <Input
           value={currentSearch}
-          placeholder="Filtrar por nombre, código o ID..."
-          className="pl-8 border-0 border-b border-gray-200 bg-transparent focus:border-lebedeva-gold rounded-none px-0 h-10 w-full placeholder:text-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
+          placeholder="Comando de búsqueda (Nombre, ID, Categoría)..."
+          className="pl-8 border-0 bg-transparent rounded-none px-0 h-10 w-full placeholder:text-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
 
       {/* Command Bar Actions */}
-      <div className="flex flex-col sm:flex-row items-center gap-6 w-full xl:w-auto">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 w-full xl:w-auto">
         {/* Stone Type Facet */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs uppercase tracking-widest text-gray-400 whitespace-nowrap hidden sm:block">
-            Tipo:
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-gray-300">
+            Tipo
           </span>
           <Select value={currentStoneType} onValueChange={onStoneTypeChange}>
-            <SelectTrigger className="w-full sm:w-[150px] border-0 border-b border-gray-200 rounded-none px-0 focus:ring-0 focus:border-lebedeva-gold text-sm">
+            <SelectTrigger className="w-[140px] border-0 p-0 h-auto text-sm bg-transparent focus:ring-0 text-right justify-end gap-2 text-gray-600 hover:text-black transition-colors">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent className="rounded-none max-h-[300px]">
@@ -77,16 +77,16 @@ export function StoneFilters({
         </div>
 
         {/* Category Facet */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs uppercase tracking-widest text-gray-400 whitespace-nowrap hidden sm:block">
-            Origen:
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-widest text-gray-300">
+            Cat
           </span>
           <Select value={currentCategory} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-full sm:w-[130px] border-0 border-b border-gray-200 rounded-none px-0 focus:ring-0 focus:border-lebedeva-gold text-sm">
+            <SelectTrigger className="w-[120px] border-0 p-0 h-auto text-sm bg-transparent focus:ring-0 text-right justify-end gap-2 text-gray-600 hover:text-black transition-colors">
               <SelectValue placeholder="Origen" />
             </SelectTrigger>
             <SelectContent className="rounded-none">
-              <SelectItem value="all">Cualquiera</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="natural">Natural</SelectItem>
               <SelectItem value="synthetic">Sintética</SelectItem>
             </SelectContent>
@@ -94,36 +94,21 @@ export function StoneFilters({
         </div>
 
         {/* Tracking Type Toggle (Minimalist) */}
-        <div className="flex items-center gap-4 border-l border-gray-200 pl-6 ml-2">
+        <div className="flex items-center gap-4 pl-4 border-l border-[#F3F4F6] h-4">
           {["all", "LOT", "UNIQUE"].map((type) => (
             <button
               key={type}
               onClick={() => onTrackingTypeChange(type)}
               className={cn(
-                "text-xs uppercase tracking-widest transition-colors duration-200",
+                "text-[10px] uppercase tracking-widest transition-colors duration-300",
                 currentTrackingType === type
-                  ? "text-lebedeva-gold font-medium"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "text-lebedeva-gold font-bold"
+                  : "text-gray-300 hover:text-gray-500"
               )}
             >
-              {type === "all" ? "Todos" : type === "LOT" ? "Lotes" : "Únicas"}
+              {type === "all" ? "Todo" : type === "LOT" ? "Lotes" : "Ref"}
             </button>
           ))}
-        </div>
-
-        {/* Low Stock Toggle */}
-        <div className="flex items-center gap-2 border-l border-gray-200 pl-6 ml-2">
-          <button
-            onClick={() => onLowStockChange(!isLowStock)}
-            className={cn(
-              "text-xs uppercase tracking-widest transition-colors duration-200",
-              isLowStock
-                ? "text-red-500 font-medium"
-                : "text-gray-400 hover:text-gray-600"
-            )}
-          >
-            Stock Bajo
-          </button>
         </div>
       </div>
     </div>
