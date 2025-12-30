@@ -47,7 +47,19 @@ model Depreciacion {
 
 // ==================== MATERIALES E INVENTARIO ====================
 
-// ==================== MATERIALES E INVENTARIO ====================
+model CompraMetal {
+  id              String   @id @default(cuid())
+  metalType       String   // "GOLD" or "SILVER"
+  gramsPurchased  Float    // Peso inicial comprado
+  gramsRemaining  Float    // Peso actual disponible (FIFO)
+  pricePerGramCOP Float    // Precio de compra por gramo
+  purchaseDate    DateTime // Fecha de compra
+  provider        String   // Proveedor
+  
+  creadoEn        DateTime @default(now())
+  actualizadoEn   DateTime @updatedAt
+}
+
 
 model TipoPiedra {
   id            String        @id @default(cuid())
