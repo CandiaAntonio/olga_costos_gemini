@@ -6,8 +6,8 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
 
 - **Costeo por 8 Etapas de Producción**: Diseño, Impresión 3D, Fundición, Preparación Esmaltado, Esmaltado, Acabado, Engaste de Piedras, Pulido
 - **Cálculo Automático de PCG**: Precio Costo por Gramo basado en costos fijos y depreciación
-- **Gestión de Inventario**: Tablas de alta precisión para Piedras (Lotes/Únicas) y esmaltes. Soporte para edición en línea.
-- **Logica de Identificación**: Sistema de IDs inteligentes `[TrackingType][Category][Serial]` (ej. LDIA001).
+- **Gestión de Inventario 2.0**: Ledger de alta precisión con edición en línea, clicks en regiones activas y panel expandible.
+- **Logica de Identificación**: Sistema de IDs inteligentes `[TrackingType][Category][Serial]` (ej. LDIA001) sin caracteres especiales.
 - **Precios Sugeridos**: Cálculo automático con margen de ganancia e impuestos
 - **Descuento Máximo**: Cálculo del descuento máximo sin pérdida
 - **División de Ganancias**: Soporte para metal propio vs. metal del padre (50%)
