@@ -63,7 +63,7 @@ async function main() {
       where: { nombre: piedra.nombre },
       update: {
         precioCop: piedra.precio,
-        trackingType: isSynthetic ? "LOT" : "UNIQUE",
+        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
         stockActual: isSynthetic ? 1000 : undefined, // Initialize stock for lots
         sizeMm: sizeMm ?? undefined,
       },
@@ -76,7 +76,7 @@ async function main() {
           : piedra.precio >= 50000
           ? "preciosa"
           : "semipreciosa",
-        trackingType: isSynthetic ? "LOT" : "UNIQUE",
+        inventoryType: isSynthetic ? "LOT" : "UNIQUE",
         stockActual: isSynthetic ? 1000 : null,
         sizeMm: sizeMm,
       },

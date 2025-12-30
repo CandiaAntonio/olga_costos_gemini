@@ -57,7 +57,7 @@ model TipoPiedra {
   categoria     String?       // "preciosa", "semipreciosa", "sintética"
   
   // Stone Tracking Configuration
-  trackingType  String        @default("LOT") // "LOT" or "UNIQUE" (Mapped from StoneTracking)
+  inventoryType  String        @default("LOT") // "LOT" or "UNIQUE" (Mapped from StoneTracking)
   
   // Lot Specific Fields
   stockActual   Int?          @default(0)     // Only for LOT
