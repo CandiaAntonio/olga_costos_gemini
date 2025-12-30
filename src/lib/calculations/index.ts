@@ -31,6 +31,27 @@ export async function calcularPCG(): Promise<number> {
 
 import { getLatestPrice } from "@/lib/market-db";
 
+export async function calcularCostoPiedras(
+  piedras: { tipoPiedraId: string; cantidad: number }[]
+): Promise<number> {
+  if (!piedras || piedras.length === 0) return 0;
+
+  // Obtener IDs únicos
+  const ids = piedras.map((p) => p.tipoPiedraId);
+  const tiposPiedra = await prisma.tipoPiedra.findMany({
+    where: { id: { in: ids } },
+  });
+
+  // Mapear precios
+  const precioMap = new Map(tiposPiedra.map((t) => [t.id, t.precioCop]));
+
+  // Calcular total
+  return piedras.reduce((total, p) => {
+    const precio = precioMap.get(p.tipoPiedraId) ?? 0;
+    return total + precio * p.cantidad;
+  }, 0);
+}
+
 /**
  * Calcula el costo total de una pieza usando precios de mercado en vivo
  * Formula Artesanal: (Peso * PrecioMetal) + (Peso * PCG) + Piedras + Esmalte + Etapas
@@ -38,7 +59,8 @@ import { getLatestPrice } from "@/lib/market-db";
 export async function calcularCostoTotal(params: {
   pesoGramos: number;
   pcg: number; // Puede venir pre-calculado o ser ignorado si calculamos todo dentro (se mantiene por compatibilidad si se pasa)
-  costoPiedras: number;
+  costoPiedras?: number; // Optional now, calculated if not provided but 'piedras' is
+  piedras?: { tipoPiedraId: string; cantidad: number }[]; // List of stones
   costoEsmalte: number;
   costoEtapas: number;
   metalType?: "silver" | "gold"; // Default: 'silver'
@@ -46,11 +68,22 @@ export async function calcularCostoTotal(params: {
   const {
     pesoGramos,
     pcg,
-    costoPiedras,
     costoEsmalte,
     costoEtapas,
     metalType = "silver",
   } = params;
+
+  // Calculate stone cost dynamically if stones are provided
+  let costoPiedrasReal = params.costoPiedras ?? 0;
+  if (params.piedras && params.piedras.length > 0) {
+    const calculatedStoneCost = await calcularCostoPiedras(params.piedras);
+    // Prefer calculated cost if available, or verify logic
+    // We will use calculated cost if stones are provided.
+    // If both are provided, we could prioritize one, but dynamic is safer for 'latest' prices.
+    // However, to respect manual overrides, we might stick to params.costoPiedras if explicitly passed validly?
+    // Requirement says: "pull precioCop from TipoPiedra". So we should use dynamic.
+    costoPiedrasReal = calculatedStoneCost;
+  }
 
   // 1. Obtener precio del metal y tasa de cambio
   const symbol = metalType === "gold" ? "XAU" : "XAG";
@@ -90,7 +123,11 @@ export async function calcularCostoTotal(params: {
 
   // 4. Sumatoria Final
   return (
-    costoMaterial + costoOverhead + costoPiedras + costoEsmalte + costoEtapas
+    costoMaterial +
+    costoOverhead +
+    costoPiedrasReal +
+    costoEsmalte +
+    costoEtapas
   );
 }
 

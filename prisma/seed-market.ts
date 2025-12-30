@@ -1,92 +1,100 @@
-import { PrismaClient } from '@prisma/client';
-// @ts-ignore
-const YahooFinance = require('yahoo-finance2').default;
-const yahooFinance = new YahooFinance();
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-async function seedMarketData() {
-    console.log("Starting market data seed...");
+export async function seedMarket() {
+  console.log("📈 Seeding initial market data...");
 
-    // Symbols: Gold (GC=F), Silver (SI=F), USD/COP (COP=X)
-    const symbols = [
-        { yfSymbol: 'GC=F', dbSymbol: 'XAU', name: 'Oro' },
-        { yfSymbol: 'SI=F', dbSymbol: 'XAG', name: 'Plata' },
-        { yfSymbol: 'COP=X', dbSymbol: 'USD', name: 'Dólar' }
-    ];
+  const marketData = [
+    {
+      symbol: "XAU",
+      price: 2600.5, // Approx
+      currency: "USD",
+      name: "Oro (Gold)",
+    },
+    {
+      symbol: "XAG",
+      price: 31.2, // Approx
+      currency: "USD",
+      name: "Plata (Silver)",
+    },
+    {
+      symbol: "USD",
+      price: 4350.0, // Approx
+      currency: "COP",
+      name: "Dólar (USD)",
+    },
+  ];
 
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setFullYear(startDate.getFullYear() - 5); // 5 years ago
+  for (const item of marketData) {
+    // Create an entry for today (or recent) if not exists
+    const date = new Date();
+    date.setHours(0, 0, 0, 0); // Normalize to day start
 
-    for (const { yfSymbol, dbSymbol, name } of symbols) {
-        try {
-            console.log(`Fetching data for ${dbSymbol} (${yfSymbol})...`);
-
-            const queryOptions = { period1: startDate, period2: endDate };
-            const result = await yahooFinance.historical(yfSymbol, queryOptions);
-
-            if (!result || result.length === 0) {
-                console.warn(`No data found for ${dbSymbol}`);
-                continue;
-            }
-
-            console.log(`Found ${result.length} records for ${dbSymbol}. Saving to DB...`);
-
-            // Batch insert for performance
-            // SQLite variable limit is usually 999, so let's batch reasonably
-            const batchSize = 100;
-            for (let i = 0; i < result.length; i += batchSize) {
-                const batch = result.slice(i, i + batchSize);
-
-                await Promise.all(batch.map(async (record: any) => {
-                    // Normalize date to start of day or ISO string
-                    const date = new Date(record.date);
-
-                    // Upsert to avoid duplicates
-                    await prisma.marketPrice.upsert({
-                        where: {
-                            symbol_date: {
-                                symbol: dbSymbol,
-                                date: date
-                            }
-                        },
-                        update: {
-                            price: record.close,
-                            open: record.open,
-                            high: record.high,
-                            low: record.low,
-                            close: record.close
-                        },
-                        create: {
-                            symbol: dbSymbol,
-                            date: date,
-                            price: record.close,
-                            currency: dbSymbol === 'USD' ? 'COP' : 'USD', // Gold/Silver in USD, USD in COP
-                            open: record.open,
-                            high: record.high,
-                            low: record.low,
-                            close: record.close
-                        }
-                    });
-                }));
-            }
-
-            console.log(`Saved ${dbSymbol} data.`);
-
-        } catch (error) {
-            console.error(`Error fetching/saving ${dbSymbol}:`, error);
-        }
-    }
-
-    console.log("Market data seeding complete.");
+    await prisma.marketPrice.upsert({
+      where: {
+        symbol_date: {
+          symbol: item.symbol,
+          date: date,
+        },
+      },
+      update: {}, // Don't change if exists
+      create: {
+        symbol: item.symbol,
+        date: date,
+        price: item.price,
+        currency: item.currency,
+        open: item.price,
+        high: item.price * 1.01,
+        low: item.price * 0.99,
+        close: item.price,
+      },
+    });
+  }
+  console.log("  ✅ Initial market data seeded");
 }
 
-seedMarketData()
-    .catch((e) => {
-        console.error(e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+// Function to calculate some history (past 30 days) to make chart look nice
+export async function seedHistory() {
+  console.log("  📊 Seeding market history (30 days)...");
+
+  const symbols = [
+    { s: "XAU", base: 2600, vol: 20 },
+    { s: "XAG", base: 31, vol: 0.5 },
+    { s: "USD", base: 4350, vol: 50 },
+  ];
+
+  const days = 30;
+  const now = new Date();
+
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    date.setHours(0, 0, 0, 0);
+
+    for (const { s, base, vol } of symbols) {
+      // Random walk
+      const noise = (Math.random() - 0.5) * vol * 2;
+      // Trend: slightly up
+      const trend = (days - i) * (vol * 0.1);
+      const price = base + trend + noise;
+
+      await prisma.marketPrice.upsert({
+        where: {
+          symbol_date: { symbol: s, date },
+        },
+        update: {},
+        create: {
+          symbol: s,
+          date,
+          price,
+          currency: s === "USD" ? "COP" : "USD",
+          open: price,
+          high: price,
+          low: price,
+          close: price,
+        },
+      });
+    }
+  }
+}

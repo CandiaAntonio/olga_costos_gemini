@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { ClientGemGrid } from "./client-grid";
+import { StonesTable } from "./stones-table";
 
 // Server Component
 export default async function PiedrasPage() {
@@ -17,13 +17,9 @@ export default async function PiedrasPage() {
   });
 
   // 2. Unique Stones (PiedraIndividual)
-  // We need to fetch related TipoPiedra info for name/base price reference if needed
-  // Note: Schema says PiedraIndividual has 'costo', but TipoPiedra has 'precioCop'.
-  // Depending on business logic, Unique stones might override price or use cost + margin.
-  // For now, we display 'costo' as the value for unique items.
   const uniqueStones = await prisma.piedraIndividual.findMany({
     where: {
-      estado: "disponible", // Only show available ones? Or all? Let's show available for inventory.
+      estado: "disponible",
     },
     include: {
       tipoPiedra: true,
@@ -31,17 +27,25 @@ export default async function PiedrasPage() {
     orderBy: { creadoEn: "desc" },
   });
 
-  // Normalize data for the grid
-  const allGems = [
-    ...lots.map((l) => ({ ...l, type: "LOT", id: l.id })),
+  // Normalize data for the table
+  const allStones = [
+    ...lots.map((l) => ({
+      id: l.id,
+      type: "LOT" as const,
+      name: l.nombre,
+      category: l.categoria,
+      stock: l.stockActual,
+      price: l.precioCop,
+      displayId: undefined, // Will be generated client-side if needed, since lots don't have code
+    })),
     ...uniqueStones.map((u) => ({
-      ...u,
-      type: "UNIQUE",
       id: u.id,
-      nombre: u.tipoPiedra.nombre + (u.codigo ? ` ${u.codigo}` : ""), // Composite name
-      categoria: u.tipoPiedra.categoria,
-      esNatural: u.tipoPiedra.esNatural,
-      precioCop: u.costo, // Mapping cost to price for display uniformity (context matters)
+      type: "UNIQUE" as const,
+      name: u.tipoPiedra.nombre,
+      category: u.tipoPiedra.categoria,
+      stock: null, // Unique stones don't use 'stock' count in the same way (implied 1)
+      price: u.costo, // Mapping cost to price for display
+      codigo: u.codigo,
     })),
   ];
 
@@ -65,8 +69,8 @@ export default async function PiedrasPage() {
         </Link>
       </div>
 
-      {/* Grid Client Component handles filtering state */}
-      <ClientGemGrid initialData={allGems} />
+      {/* Stones Table */}
+      <StonesTable initialData={allStones} />
     </div>
   );
 }

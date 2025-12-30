@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import * as XLSX from "xlsx";
 import * as path from "path";
+import { seedMarket, seedHistory } from "./seed-market";
 
 const prisma = new PrismaClient();
 
@@ -31,9 +32,10 @@ async function main() {
   console.log("💎 Migrando tipos de piedras desde Excel...");
   const sheet = workbook.Sheets["Costo Directos"];
 
-  // Rango de lectura aprox. Ajustar si la lista crece.
-  // U2 es la celda de inicio para Nombres.
-  // V2 es la celda de inicio para Precios.
+  if (!sheet) {
+    console.error("❌ Hoja 'Costo Directos' no encontrada en el Excel.");
+    throw new Error("Hoja 'Costo Directos' no encontrada");
+  }
 
   const piedrasFound = [];
 
@@ -235,6 +237,12 @@ async function main() {
   console.log(`   - Tipos de piedras: ${totalPiedras}`);
   console.log(`   - Costos fijos: ${totalCostos}`);
   console.log(`   - Depreciaciones: ${totalDep}`);
+
+  // 6. Seed Market Data
+  await seedMarket();
+  await seedHistory();
+
+  console.log("  ✅ Market seed complete");
 }
 
 main()

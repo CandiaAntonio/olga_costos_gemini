@@ -69,10 +69,21 @@ model TipoPiedra {
   
   piezaPiedras PiezaPiedra[]
   piedrasIndividuales PiedraIndividual[]
+  stockMovements StockMovement[]
 }
 
-// Enum 'TrackingType' simulated as String for SQLite
-// "LOT", "UNIQUE"
+model StockMovement {
+  id           String      @id @default(cuid())
+  tipoPiedraId String
+  tipoPiedra   TipoPiedra  @relation(fields: [tipoPiedraId], references: [id])
+  cantidad     Int         // Positivo (entrada), Negativo (salida)
+  tipoMovimiento String    // "COMPRA", "USO_PIEZA", "AJUSTE", "INICIAL"
+  referenciaId String?     // ID de Pieza o Compra si aplica
+  notas        String?
+  creadoEn     DateTime    @default(now())
+  
+  @@index([tipoPiedraId])
+}
 
 model Esmalte {
   id              String   @id @default(cuid())
@@ -95,6 +106,7 @@ model PiedraIndividual {
   // Unique Identification
   codigo            String?  @unique // Identificador único (ej: RUB-001)
   certificateNumber String?  // Certificado GIA/IGL etc.
+  certificateImageUrl String? // URL de la imagen del certificado
   
   // Gemological Properties
   carats         Float?   // Peso específico
