@@ -51,16 +51,16 @@ export default async function PiedrasPage() {
       <div className="flex items-center justify-between border-b border-gray-100 pb-6">
         <div>
           <h1 className="text-4xl font-serif text-lebedeva-black mb-2">
-            Atelier de Gemas
+            Gemas
           </h1>
           <p className="text-gray-400 font-technical font-light">
-            Gestión de inventario de piedras preciosas y lotes calibrados
+            Gestión de inventario de piedras
           </p>
         </div>
         <Link href="/inventario/piedras/nueva">
           <Button className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-xs px-6 py-6 transition-all duration-300">
             <Plus className="h-4 w-4 mr-2" />
-            Nueva Pieza
+            Nueva Piedra
           </Button>
         </Link>
       </div>
