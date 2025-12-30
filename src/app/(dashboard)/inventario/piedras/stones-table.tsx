@@ -207,7 +207,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
         <div className="w-full">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b-[0.5px] border-[#F3F4F6] text-xl font-medium tracking-widest text-gray-500 font-serif">
+              <tr className="border-b-[0.5px] border-[#F3F4F6] text-xl text-gray-500 font-serif font-normal tracking-widest">
                 <th className="py-6 px-4 w-32 font-normal">
                   <Tooltip>
                     <TooltipTrigger
