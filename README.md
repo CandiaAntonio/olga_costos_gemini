@@ -8,6 +8,7 @@ Sistema web de costeo para producción de joyería artesanal. Reemplaza hojas de
 - **Cálculo Automático de PCG**: Precio Costo por Gramo basado en costos fijos y depreciación
 - **Gestión de Inventario 2.0**: Ledger de alta precisión con edición en línea, clicks en regiones activas y panel expandible.
 - **Logica de Identificación**: Sistema de IDs inteligentes `[TrackingType][Category][Serial]` (ej. LDIA001) sin caracteres especiales.
+- **Digital Atelier UI**: Interfaz minimalista con tipografía Cormorant, paleta blanco seda (#FAFAFA) y feedback cromático dinámico.
 - **Precios Sugeridos**: Cálculo automático con margen de ganancia e impuestos
 - **Descuento Máximo**: Cálculo del descuento máximo sin pérdida
 - **División de Ganancias**: Soporte para metal propio vs. metal del padre (50%)
