@@ -6,12 +6,12 @@ async function verify() {
   console.log("🔍 Verifying Stone Types Inventory...");
 
   const lots = await prisma.tipoPiedra.findMany({
-    where: { inventoryType: "LOT" },
+    where: { trackingType: "LOT" },
     select: { nombre: true },
   });
 
   const uniques = await prisma.tipoPiedra.findMany({
-    where: { inventoryType: "UNIQUE" },
+    where: { trackingType: "UNIQUE" },
     select: { nombre: true },
   });
 
