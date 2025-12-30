@@ -290,7 +290,12 @@ export function StonesTable({ initialData }: StonesTableProps) {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (stone.category) {
-                            setCurrentCategory(stone.category);
+                            // Toggle Logic: If clicking active category, reset to 'all'
+                            const nextCategory =
+                              currentCategory === stone.category
+                                ? "all"
+                                : stone.category;
+                            setCurrentCategory(nextCategory);
                           }
                         }}
                       >
