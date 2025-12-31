@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +28,8 @@ interface StoneData {
   displayId?: string; // Optional pre-calculated ID
   codigo?: string | null; // For uniques
   // Detail fields
+  shape?: string | null; // Cut/Shape
+  size?: string | null; // Size for lots
   carats?: number | null;
   clarity?: string | null;
   color?: string | null;
@@ -40,7 +41,15 @@ interface StonesTableProps {
   initialData: StoneData[];
 }
 
-type SortKey = "stock" | "price" | "category" | null;
+type SortKey =
+  | "stock"
+  | "price"
+  | "category"
+  | "shape"
+  | "color"
+  | "clarity"
+  | "weight"
+  | null;
 type SortDirection = "asc" | "desc";
 
 export function StonesTable({ initialData }: StonesTableProps) {
@@ -72,12 +81,6 @@ export function StonesTable({ initialData }: StonesTableProps) {
       stone.id.slice(-3).toUpperCase()
     );
   };
-
-  // Derive unique stone names for the filter dropdown
-  const uniqueStoneNames = useMemo(() => {
-    const names = new Set(initialData.map((s) => s.name));
-    return Array.from(names).sort();
-  }, [initialData]);
 
   const handleStockUpdate = async (
     id: string,
@@ -168,13 +171,48 @@ export function StonesTable({ initialData }: StonesTableProps) {
     // 2. Sort
     if (sortConfig.key) {
       data.sort((a, b) => {
-        let valA: string | number = a[sortConfig.key!] ?? 0;
-        let valB: string | number = b[sortConfig.key!] ?? 0;
+        let valA: string | number = 0;
+        let valB: string | number = 0;
 
-        // Custom handling for category string comparison
-        if (sortConfig.key === "category") {
-          valA = a.category || "";
-          valB = b.category || "";
+        switch (sortConfig.key) {
+          case "stock":
+            valA = a.stock || 0;
+            valB = b.stock || 0;
+            break;
+          case "price":
+            valA = a.price;
+            valB = b.price;
+            break;
+          case "category":
+            valA = a.category || "";
+            valB = b.category || "";
+            break;
+          case "shape":
+            valA = a.shape || "";
+            valB = b.shape || "";
+            break;
+          case "color":
+            valA = a.color || "";
+            valB = b.color || "";
+            break;
+          case "clarity":
+            valA = a.clarity || "";
+            valB = b.clarity || "";
+            break;
+          case "weight":
+            // For lots, use size string logic (rough approx for sorting) or 0
+            // For uniques, use carats
+            // To enable sorting mixed types, we might prioritize carats.
+            valA = a.type === "UNIQUE" ? a.carats || 0 : 0;
+            valB = b.type === "UNIQUE" ? b.carats || 0 : 0;
+            // If both are lots, sort by size string? (complex due to "mm")
+            if (a.type === "LOT" && b.type === "LOT") {
+              valA = parseFloat(a.size || "0");
+              valB = parseFloat(b.size || "0");
+            }
+            break;
+          default:
+            return 0;
         }
 
         if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
@@ -207,7 +245,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
         <div className="w-full">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b-[0.5px] border-[#F3F4F6] text-xl text-gray-500 font-serif font-normal tracking-widest">
+              <tr className="border-b-[0.5px] border-[#F3F4F6] text-sm text-gray-500 font-serif font-normal tracking-widest uppercase">
                 <th className="py-6 px-4 w-32 font-normal">
                   <Tooltip>
                     <TooltipTrigger
@@ -233,7 +271,44 @@ export function StonesTable({ initialData }: StonesTableProps) {
                   </div>
                 </th>
                 <th
-                  className="py-6 px-4 text-center cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-32 font-normal"
+                  className="py-6 px-4 font-normal cursor-pointer hover:text-lebedeva-gold transition-colors group select-none hidden md:table-cell"
+                  onClick={() => handleSort("shape")}
+                >
+                  <div className="flex items-center gap-1">
+                    Corte
+                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th
+                  className="py-6 px-4 font-normal cursor-pointer hover:text-lebedeva-gold transition-colors group select-none hidden lg:table-cell"
+                  onClick={() => handleSort("color")}
+                >
+                  <div className="flex items-center gap-1">
+                    Color
+                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th
+                  className="py-6 px-4 font-normal cursor-pointer hover:text-lebedeva-gold transition-colors group select-none hidden lg:table-cell"
+                  onClick={() => handleSort("clarity")}
+                >
+                  <div className="flex items-center gap-1">
+                    Claridad
+                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th
+                  className="py-6 px-4 font-normal cursor-pointer hover:text-lebedeva-gold transition-colors group select-none text-center"
+                  onClick={() => handleSort("weight")}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Tamaño / Ct
+                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+
+                <th
+                  className="py-6 px-4 text-center cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-24 font-normal"
                   onClick={() => handleSort("stock")}
                 >
                   <div className="flex items-center justify-center gap-1">
@@ -242,11 +317,11 @@ export function StonesTable({ initialData }: StonesTableProps) {
                   </div>
                 </th>
                 <th
-                  className="py-6 px-4 text-right cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-48 font-normal"
+                  className="py-6 px-4 text-right cursor-pointer hover:text-lebedeva-gold transition-colors group select-none w-40 font-normal"
                   onClick={() => handleSort("price")}
                 >
                   <div className="flex items-center justify-end gap-1">
-                    Precio (COP)
+                    Precio
                     <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </th>
@@ -278,7 +353,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                         href={`/inventario/piedras/${stone.id}`}
                         className="block w-full h-full cursor-pointer group"
                       >
-                        <span className="font-serif text-xl text-lebedeva-black tracking-wide group-hover:text-lebedeva-gold transition-colors">
+                        <span className="font-serif text-lg text-lebedeva-black tracking-wide group-hover:text-lebedeva-gold transition-colors">
                           {stone.name}
                         </span>
                       </Link>
@@ -286,7 +361,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                     <td className="py-6 px-4">
                       <Badge
                         variant={getBadgeVariant(stone.category) as any}
-                        className="rounded-none font-technical font-light tracking-wide text-[10px] px-3 py-1 border-gray-100 bg-white shadow-sm cursor-pointer hover:bg-gray-100 transition-colors"
+                        className="rounded-none font-technical font-light tracking-wide text-[10px] px-3 py-1 border-gray-100 bg-white shadow-sm cursor-pointer hover:bg-gray-100 transition-colors uppercase"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (stone.category) {
@@ -302,6 +377,24 @@ export function StonesTable({ initialData }: StonesTableProps) {
                         {stone.category || "General"}
                       </Badge>
                     </td>
+                    {/* New Columns */}
+                    <td className="py-6 px-4 text-sm font-technical text-gray-500 hidden md:table-cell">
+                      {stone.shape || "—"}
+                    </td>
+                    <td className="py-6 px-4 text-sm font-technical text-gray-500 hidden lg:table-cell">
+                      {stone.color || "—"}
+                    </td>
+                    <td className="py-6 px-4 text-sm font-technical text-gray-500 hidden lg:table-cell">
+                      {stone.clarity || "—"}
+                    </td>
+                    <td className="py-6 px-4 text-sm font-technical text-gray-600 text-center font-medium">
+                      {stone.type === "LOT" ? (
+                        <span>{stone.size || "—"}</span>
+                      ) : (
+                        <span>{stone.carats ? `${stone.carats} ct` : "—"}</span>
+                      )}
+                    </td>
+
                     <td className="py-6 px-4 text-center">
                       {stone.type === "LOT" ? (
                         editableStockId === stone.id ? (
@@ -349,7 +442,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                       <div
                         className={cn(
                           "relative group/price flex items-center justify-end",
-                          isPriceEditable ? "w-32" : "w-auto"
+                          isPriceEditable ? "w-28" : "w-auto"
                         )}
                       >
                         {isPriceEditable ? (
@@ -376,7 +469,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
                             }}
                           />
                         ) : (
-                          <span className="text-gray-400 tabular-nums font-technical text-sm">
+                          <span className="text-gray-600 tabular-nums font-technical text-sm font-medium">
                             {new Intl.NumberFormat("es-CO", {
                               style: "currency",
                               currency: "COP",
@@ -425,7 +518,7 @@ export function StonesTable({ initialData }: StonesTableProps) {
               {processedData.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={10}
                     className="py-24 text-center text-gray-300 font-serif text-xl italic"
                   >
                     No se encontraron gemas con estos filtros.

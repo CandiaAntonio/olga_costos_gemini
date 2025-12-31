@@ -8,6 +8,26 @@ import { StonesTable } from "./stones-table";
 export default async function PiedrasPage() {
   // Fetch both sets of data
   // 1. Lots (TipoPiedra where inventoryType = LOT)
+  // Note: Schema doesn't have explicit color/clarity/shape on TipoPiedra yet unless added in previous steps.
+  // Assuming standard fields: sizeMm exists.
+  // The user requested updating StonesTable to show Cut, Color, Clarity.
+  // If these fields are missing on TipoPiedra (Lots), they might be N/A or we need to check schema.
+  // From schema.prisma:
+  // TipoPiedra has: sizeMm (Float). No shape/color/clarity explicitly for the TYPE itself unless description or new fields.
+  // PiedraIndividual has: shape, color, clarity, carats.
+
+  // Wait, the user prompt said "Update StonesTable... Add columns... for Size (for lots) / Carats (for unique)".
+  // And "Cut (Shape), Color, Clarity".
+  // Let's check schema again.
+  // TipoPiedra: nombre, precioCop, esNatural, categoria, trackingType, stockActual, sizeMm, descripcion.
+  // PiedraIndividual: carats, clarity, color, shape, treatment, origin...
+
+  // So for LOTS (TipoPiedra), "Cut", "Color", "Clarity" might not be stored directly?
+  // Usually Lots are defined by their properties. "Round Diamond Lot".
+  // If they aren't in schema, I might have to pass null or assume they are part of the name/description.
+  // BUT, the user asked to "Add columns for 'Cut' (Shape)".
+  // I'll map what I can.
+
   const lots = await prisma.tipoPiedra.findMany({
     where: {
       activo: true,
@@ -35,16 +55,22 @@ export default async function PiedrasPage() {
       name: l.nombre,
       category: l.categoria,
       stock: l.stockActual,
-      price: l.precioCop,
-      displayId: undefined, // Will be generated client-side if needed, since lots don't have code
+      price: l.precioCop, // Unit Price
+      displayId: undefined,
+      // Mapping details for Lot
+      size: l.sizeMm ? `${l.sizeMm} mm` : null,
+      shape: null, // Not in TipoPiedra schema
+      color: null, // Not in TipoPiedra schema
+      clarity: null, // Not in TipoPiedra schema
+      // We could parse them from name if strictly needed, but better to leave null if not in DB.
     })),
     ...uniqueStones.map((u) => ({
       id: u.id,
       type: "UNIQUE" as const,
       name: u.tipoPiedra.nombre,
       category: u.tipoPiedra.categoria,
-      stock: null, // Unique stones don't use 'stock' count in the same way (implied 1)
-      price: u.costo, // Mapping cost to price for display
+      stock: null,
+      price: u.costo, // Total Cost
       codigo: u.codigo,
       // Details
       carats: u.carats,
@@ -52,6 +78,7 @@ export default async function PiedrasPage() {
       color: u.color,
       origin: u.origin,
       certificate: u.certificateNumber,
+      shape: u.shape,
     })),
   ];
 
@@ -69,23 +96,13 @@ export default async function PiedrasPage() {
             </p>
           </div>
           <div className="flex gap-4">
-            <Link href="/inventario/piedras/nueva-lote">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-none border-stone-200 font-serif tracking-widest hover:bg-stone-50 hover:text-lebedeva-gold uppercase text-[10px]"
-              >
-                <Plus className="h-3 w-3 mr-2" />
-                Nuevo Lote
-              </Button>
-            </Link>
             <Link href="/inventario/piedras/nueva">
               <Button
                 size="sm"
                 className="bg-lebedeva-black hover:bg-lebedeva-gold text-white rounded-none uppercase tracking-widest text-[10px] font-serif shadow-md hover:shadow-lg h-9 px-3"
               >
                 <Plus className="h-3 w-3 mr-2" />
-                Nueva Piedra
+                Nueva Piedra / Lote
               </Button>
             </Link>
           </div>

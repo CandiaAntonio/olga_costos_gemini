@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,17 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Box, Sparkles } from "lucide-react";
+import {
+  GEM_CUTS,
+  GEM_CLARITY,
+  GEM_COLORS,
+  GEM_SIZES,
+} from "@/lib/constants/gem-options";
 
 // Define the form data type
 interface GemFormData {
   nombre: string;
-  precioCop: string;
+  precioCop: string; // This serves as Total Cost for Unique, or Unit Price for Lot
   descripcion: string;
   esNatural: boolean;
   categoria: "preciosa" | "semipreciosa" | "sintética";
@@ -28,11 +34,13 @@ interface GemFormData {
   // Unique specific
   codigo?: string;
   pesoCarats?: string;
+  pricePerCarat?: string; // New field for calculation
   tamano?: string;
   claridad?: string;
   color?: string;
   certificado?: string;
   origen?: string;
+  forma?: string; // Standardized Cut/Shape
   // Lot specific
   stockActual?: string;
 }
@@ -51,22 +59,48 @@ export function NewGemForm() {
     categoria: "preciosa",
     trackingType: "LOT",
     pesoCarats: "",
+    pricePerCarat: "",
     tamano: "",
     claridad: "",
     color: "",
+    forma: "",
   });
+
+  // Auto-calculation for Unique Gems
+  useEffect(() => {
+    if (type === "UNIQUE" && formData.pesoCarats && formData.pricePerCarat) {
+      const carats = parseFloat(formData.pesoCarats);
+      const pricePerCt = parseFloat(formData.pricePerCarat);
+      if (!isNaN(carats) && !isNaN(pricePerCt)) {
+        const total = Math.round(carats * pricePerCt);
+        setFormData((prev) => ({ ...prev, precioCop: total.toString() }));
+      }
+    }
+  }, [formData.pesoCarats, formData.pricePerCarat, type]);
 
   // Handle selection
   const handleSelect = (selectedType: "LOT" | "UNIQUE") => {
     setType(selectedType);
-    setFormData((prev) => ({ ...prev, trackingType: selectedType }));
+    setFormData((prev) => ({
+      ...prev,
+      trackingType: selectedType,
+      // Reset incompatible fields if needed, or keep for flexibility
+      tamano: "",
+      forma: "",
+      color: "",
+      claridad: "",
+    }));
     setStep("form");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: Implement server action or API call
+
+    // In a real app, we would send the specific fields based on type
+    // to the backend API here.
+
+    // Simulating API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     console.log("Submitting:", formData);
@@ -196,6 +230,50 @@ export function NewGemForm() {
                 </div>
               </div>
 
+              {/* Form / Cut Selection */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="forma"
+                    className="text-xs uppercase tracking-wider text-gray-500"
+                  >
+                    Forma / Corte
+                  </Label>
+                  <Select
+                    value={formData.forma}
+                    onValueChange={(v: string) =>
+                      setFormData({ ...formData, forma: v })
+                    }
+                  >
+                    <SelectTrigger className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent">
+                      <SelectValue placeholder="Seleccionar Corte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GEM_CUTS.map((cut) => (
+                        <SelectItem key={cut} value={cut}>
+                          {cut}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-8">
+                  <Switch
+                    id="natural"
+                    checked={formData.esNatural}
+                    onChange={(e) =>
+                      setFormData({ ...formData, esNatural: e.target.checked })
+                    }
+                  />
+                  <Label
+                    htmlFor="natural"
+                    className="text-sm font-technical text-gray-600"
+                  >
+                    Es Natural
+                  </Label>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label
                   htmlFor="descripcion"
@@ -214,70 +292,128 @@ export function NewGemForm() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="precio"
-                    className="text-xs uppercase tracking-wider text-gray-500"
-                  >
-                    Precio (COP)
-                  </Label>
-                  <Input
-                    id="precio"
-                    type="number"
-                    placeholder="0"
-                    value={formData.precioCop}
-                    onChange={(e) =>
-                      setFormData({ ...formData, precioCop: e.target.value })
-                    }
-                    className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
-                    required
-                  />
-                  <p className="text-[10px] text-gray-400">
-                    {type === "UNIQUE"
-                      ? "Precio total de la pieza"
-                      : "Precio promedio por unidad"}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2 pt-8">
-                  <Switch id="natural" checked={formData.esNatural} />
-                  <Label
-                    htmlFor="natural"
-                    className="text-sm font-technical text-gray-600"
-                  >
-                    Es Natural
-                  </Label>
-                </div>
-              </div>
-
               {type === "LOT" && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="stockActual"
-                    className="text-xs uppercase tracking-wider text-gray-500"
-                  >
-                    Cantidad (Stock)
-                  </Label>
-                  <Input
-                    id="stockActual"
-                    type="number"
-                    placeholder="0"
-                    value={formData.stockActual || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockActual: e.target.value })
-                    }
-                    className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
-                  />
-                  <p className="text-[10px] text-lebedeva-gold">
-                    * Se sumará al inventario existente si el nombre coincide.
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="tamano"
+                      className="text-xs uppercase tracking-wider text-gray-500"
+                    >
+                      Tamaño (mm)
+                    </Label>
+                    <Select
+                      value={formData.tamano}
+                      onValueChange={(v: string) =>
+                        setFormData({ ...formData, tamano: v })
+                      }
+                    >
+                      <SelectTrigger className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px]">
+                        {GEM_SIZES.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="stockActual"
+                      className="text-xs uppercase tracking-wider text-gray-500"
+                    >
+                      Cantidad (Stock)
+                    </Label>
+                    <Input
+                      id="stockActual"
+                      type="number"
+                      placeholder="0"
+                      value={formData.stockActual || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          stockActual: e.target.value,
+                        })
+                      }
+                      className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
+                    />
+                  </div>
                 </div>
               )}
+
+              {/* Pricing Logic based on Type */}
+              <div className="grid grid-cols-2 gap-4">
+                {type === "UNIQUE" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="pricePerCarat"
+                        className="text-xs uppercase tracking-wider text-gray-500"
+                      >
+                        Precio por Carat (COP)
+                      </Label>
+                      <Input
+                        id="pricePerCarat"
+                        type="number"
+                        placeholder="0"
+                        value={formData.pricePerCarat}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pricePerCarat: e.target.value,
+                          })
+                        }
+                        className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="precioTotal"
+                        className="text-xs uppercase tracking-wider text-gray-500"
+                      >
+                        Costo Total (COP)
+                      </Label>
+                      <Input
+                        id="precioTotal"
+                        type="number"
+                        value={formData.precioCop}
+                        readOnly
+                        className="border-gray-200 bg-gray-50 font-bold text-lebedeva-black rounded-none"
+                      />
+                      <p className="text-[10px] text-lebedeva-gold">
+                        * Calculado automáticamente (Peso * $/Ct)
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="precio"
+                      className="text-xs uppercase tracking-wider text-gray-500"
+                    >
+                      Precio por Unidad (COP)
+                    </Label>
+                    <Input
+                      id="precio"
+                      type="number"
+                      placeholder="0"
+                      value={formData.precioCop}
+                      onChange={(e) =>
+                        setFormData({ ...formData, precioCop: e.target.value })
+                      }
+                      className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="lebedeva-divider" />
 
-            {/* Specific Fields */}
+            {/* Specific Fields for UNIQUE */}
             {type === "UNIQUE" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h3 className="text-sm font-serif text-lebedeva-gold tracking-widest uppercase mb-4">
@@ -310,15 +446,23 @@ export function NewGemForm() {
                     >
                       Color
                     </Label>
-                    <Input
-                      id="color"
-                      placeholder="Ej: Vivid Green"
+                    <Select
                       value={formData.color}
-                      onChange={(e) =>
-                        setFormData({ ...formData, color: e.target.value })
+                      onValueChange={(v: string) =>
+                        setFormData({ ...formData, color: v })
                       }
-                      className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
-                    />
+                    >
+                      <SelectTrigger className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px]">
+                        {GEM_COLORS.map((col) => (
+                          <SelectItem key={col} value={col}>
+                            {col}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label
@@ -327,15 +471,23 @@ export function NewGemForm() {
                     >
                       Claridad
                     </Label>
-                    <Input
-                      id="clarity"
-                      placeholder="Ej: VVS1"
+                    <Select
                       value={formData.claridad}
-                      onChange={(e) =>
-                        setFormData({ ...formData, claridad: e.target.value })
+                      onValueChange={(v: string) =>
+                        setFormData({ ...formData, claridad: v })
                       }
-                      className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent"
-                    />
+                    >
+                      <SelectTrigger className="border-gray-200 focus:border-lebedeva-gold rounded-none bg-transparent">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px]">
+                        {GEM_CLARITY.map((clarity) => (
+                          <SelectItem key={clarity} value={clarity}>
+                            {clarity}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label

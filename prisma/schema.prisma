@@ -74,6 +74,9 @@ model TipoPiedra {
   // Lot Specific Fields
   stockActual   Int?          @default(0)     // Only for LOT
   sizeMm        Float?        // Only for LOT (e.g., 1.0, 1.5)
+  shape         String        @default("Round") // Cut/Shape
+  color         String?       // Color palette
+  clarity       String?       // Clarity grade
   
   descripcion   String?
   activo        Boolean       @default(true)
@@ -128,6 +131,7 @@ model PiedraIndividual {
   treatment      String?  // Heated, Filled, None
   origin         String?  // Colombia, Burma, etc.
   
+  pricePerCarat  Float?   // Base calculation metric
   costo          Float    // Costo específico de esta piedra en COP
   ubicacion      String?  // Ej: "Caja Fuerte", "Vitrina"
   

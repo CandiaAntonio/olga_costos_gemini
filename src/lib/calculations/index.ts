@@ -52,9 +52,12 @@ export async function calcularCostoPiedras(
   }, 0);
 }
 
+// Factor de riesgo por engaste (rotura y mano de obra)
+export const SETTING_RISK_FACTOR = 2.0;
+
 /**
  * Calcula el costo total de una pieza usando precios de mercado en vivo
- * Formula Artesanal: (Peso * PrecioMetal) + (Peso * PCG) + Piedras + Esmalte + Etapas
+ * Formula Artesanal: (Peso * PrecioMetal) + (Peso * PCG) + (Piedras * Factor) + Esmalte + Etapas
  */
 export async function calcularCostoTotal(params: {
   pesoGramos: number;
@@ -84,6 +87,10 @@ export async function calcularCostoTotal(params: {
     // Requirement says: "pull precioCop from TipoPiedra". So we should use dynamic.
     costoPiedrasReal = calculatedStoneCost;
   }
+
+  // Apply Risk Factor to Stones
+  // "Stones double their cost when set in a jewel"
+  const costoPiedrasConFactor = costoPiedrasReal * SETTING_RISK_FACTOR;
 
   // 1. Obtener precio del metal y tasa de cambio
   const symbol = metalType === "gold" ? "XAU" : "XAG";
@@ -125,7 +132,7 @@ export async function calcularCostoTotal(params: {
   return (
     costoMaterial +
     costoOverhead +
-    costoPiedrasReal +
+    costoPiedrasConFactor +
     costoEsmalte +
     costoEtapas
   );
